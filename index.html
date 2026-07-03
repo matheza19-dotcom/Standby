@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iOS StandBy Pro v8.7 Ultra</title>
+    <title>iOS StandBy Dashboard Pro</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,285 +15,137 @@
             --global-scale: 1.0;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: var(--bg-color);
-            color: #ffffff;
-            font-family: var(--font);
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            -webkit-user-select: none;
-            user-select: none;
+            background: var(--bg-color); color: #ffffff; font-family: var(--font);
+            overflow: hidden; width: 100vw; height: 100vh; display: flex;
+            justify-content: center; align-items: center; -webkit-user-select: none; user-select: none;
         }
 
         #scaling-wrapper {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transform: scale(var(--global-scale));
-            transform-origin: center center;
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center;
+            transform: scale(var(--global-scale)); transform-origin: center center; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        #protection-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            transition: transform 0.5s ease;
-        }
+        #protection-container { width: 100vw; height: 100vh; display: flex; transition: transform 0.5s ease; }
+        .main-slider { width: 100vw; height: 100vh; }
+        .page { width: 100vw; height: 100vh; display: flex; justify-content: flex-start; align-items: flex-start; }
 
-        .main-slider {
-            width: 100%;
-            height: 100%;
-        }
-
-        .page {
-            width: 100vw;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .split-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            width: 100%;
-            max-width: 1150px;
-            height: 100%;
-            max-height: 480px;
-        }
-
-        .widget-column {
-            position: relative;
-            height: 100%;
-            overflow: hidden;
-            border-radius: 36px;
-        }
-
-        .widget-track {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        /* --- DASHBOARD GRID (Jetzt als absolut freies Canvas) --- */
+        .dashboard-grid {
+            position: relative; /* Erlaubt die absolute Positionierung der Widgets */
+            width: 100vw; max-width: none; height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Stufenlose Fläche */
         }
 
         .widget {
-            height: 100%;
-            width: 100%;
-            flex-shrink: 0;
-            border-radius: 36px;
-            padding: 22px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            text-align: center;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: none;
-            transition: border-color 0.2s, background 0.2s;
+            position: absolute; /* STUFENLOSE POSITIONIERUNG */
+            touch-action: none; /* VERHINDERT SCROLLEN BEIM ZIEHEN AUF TOUCHSCREENS */
+            width: var(--widget-w, 320px); height: var(--widget-h, 280px);
+            border-radius: 36px; padding: 22px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: border-color 0.2s, background 0.2s; cursor: grab;
         }
+        .widget:active { cursor: grabbing; }
+
+        /* --- RESIZE HANDLE (STUFENLOS VERSTELLEN) --- */
+        .resize-handle {
+            position: absolute; bottom: 15px; right: 15px; width: 30px; height: 30px;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); border-radius: 50%;
+            cursor: nwse-resize; z-index: 50; display: flex; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s; pointer-events: auto !important;
+        }
+        .resize-handle::after { content: '⤡'; color: white; font-size: 16px; transform: rotate(90deg); }
+        
+        /* --- CONFIG & DELETE BUTTONS --- */
+        .widget-config-btn, .widget-delete-btn {
+            position: absolute; top: 15px; background: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15); color: white; font-size: 1.1rem; padding: 8px;
+            border-radius: 50%; cursor: pointer; backdrop-filter: blur(8px); opacity: 0;
+            transition: opacity 0.3s ease-in-out; z-index: 50; pointer-events: auto !important;
+        }
+        .widget-config-btn { right: 15px; }
+        .widget-delete-btn { left: 15px; background: rgba(255, 59, 48, 0.7); }
+        
+        .widget:hover .resize-handle, .widget:active .resize-handle,
+        .widget:hover .widget-config-btn, .widget:hover .widget-delete-btn { opacity: 1; }
 
         /* DIGITAL & TEXT STYLES */
-        .digital-clock { font-size: 5rem; font-weight: 800; letter-spacing: -2px; line-height: 1; }
-        .seconds { font-size: 1.8rem; margin-left: 5px; font-variant-numeric: tabular-nums; opacity: 0.8; }
-        .date-sub { font-size: 1.3rem; margin-top: 8px; text-transform: capitalize; }
-
-        .analog-container { width: 230px; height: 230px; display: flex; justify-content: center; align-items: center; }
-        canvas.analog-canvas { width: 230px; height: 230px; display: block; }
+        .digital-clock { font-size: clamp(3rem, 5vw + 1rem, 6rem); font-weight: 800; letter-spacing: -2px; line-height: 1; }
+        .seconds { font-size: 0.35em; margin-left: 5px; font-variant-numeric: tabular-nums; opacity: 0.8; }
+        .date-sub { font-size: clamp(1rem, 1.5vw + 0.5rem, 1.5rem); margin-top: 8px; text-transform: capitalize; }
+        .analog-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        canvas.analog-canvas { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
 
         /* CALENDAR */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            margin-top: 10px;
-            font-size: 0.85rem;
-            width: 100%;
-            max-width: 290px;
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; font-size: clamp(0.7rem, 2vw, 1rem); width: 100%; max-width: 350px; }
         .calendar-grid div { padding: 3px; text-align: center; }
         .cal-head { font-weight: bold; opacity: 0.7; }
         .cal-today { border-radius: 50%; font-weight: 900 !important; }
 
-        /* FULLSPACE WEATHER PLUGINS */
-        .weather-fullspace-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* DETAILED WEATHER */
+        /* WEATHER */
+        .weather-fullspace-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         .weather-detail-layout { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; text-align: left; }
         .weather-main-row { display: flex; justify-content: space-between; align-items: center; }
-        .weather-temp-big { font-size: 4rem; font-weight: 800; letter-spacing: -1px; line-height: 1; }
-        .weather-grid-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; font-size: 0.85rem; }
+        .weather-temp-big { font-size: clamp(3rem, 5vw, 5rem); font-weight: 800; letter-spacing: -1px; line-height: 1; }
+        .weather-grid-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; font-size: clamp(0.7rem, 1.5vw, 0.9rem); }
         .weather-detail-item { background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 12px; display: flex; flex-direction: column; }
         .weather-detail-label { font-size: 0.7rem; opacity: 0.6; margin-bottom: 2px; text-transform: uppercase; }
 
-        /* HOURLY WEATHER */
-        .hourly-scroll-container { 
-            display: flex; 
-            gap: 10px; 
-            overflow-x: auto; 
-            width: 100%; 
-            height: 100%;
-            align-items: center;
-            padding: 5px 0; 
-            scrollbar-width: none; 
-            -webkit-overflow-scrolling: touch; 
-        }
-        .hourly-scroll-container::-webkit-scrollbar { display: none; }
-        .hourly-scroll-container.drag-scroll { cursor: grab; }
-        .hourly-scroll-container.drag-scroll:active { cursor: grabbing; }
+        .hourly-scroll-container, .daily-list-container { display: flex; gap: 10px; width: 100%; height: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+        .hourly-scroll-container { overflow-x: auto; align-items: center; padding: 5px 0; }
+        .daily-list-container { flex-direction: column; overflow-y: auto; padding-right: 2px; }
+        .hourly-scroll-container::-webkit-scrollbar, .daily-list-container::-webkit-scrollbar { display: none; }
+        .hourly-item { display: flex; flex-direction: column; align-items: center; justify-content: space-around; background: rgba(255,255,255,0.06); padding: 12px 8px; min-width: 70px; height: 90%; border-radius: 18px; }
+        .daily-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 7px 14px; border-radius: 12px; font-size: 0.85rem; flex-shrink: 0; }
 
-        .hourly-item { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: space-around;
-            background: rgba(255,255,255,0.06); 
-            padding: 12px 8px; 
-            min-width: 70px; 
-            height: 90%;
-            border-radius: 18px; 
-            text-align: center; 
-        }
-
-        /* DAILY WEATHER */
-        .daily-list-container { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 5px; 
-            width: 100%; 
-            height: 100%;
-            overflow-y: auto; 
-            padding-right: 2px; 
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-        }
-        .daily-list-container::-webkit-scrollbar { display: none; }
-        .daily-list-container.drag-scroll { cursor: grab; }
-        .daily-list-container.drag-scroll:active { cursor: grabbing; }
-
-        .daily-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: rgba(255,255,255,0.05); 
-            padding: 7px 14px; 
-            border-radius: 12px; 
-            font-size: 0.85rem; 
-            flex-shrink: 0;
-        }
-
-        /* PHOTO WIDGET WITH OBJECT FIT */
-        .inline-photo-widget { 
-            width: 100%; 
-            height: 100%; 
-            background-size: cover; 
-            background-position: center; 
-            background-repeat: no-repeat;
-            border-radius: 28px; 
-            transition: background-image 0.8s ease-in-out, background-size 0.2s; 
-        }
+        /* PHOTOS */
+        .inline-photo-widget { width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 28px; transition: background-image 0.8s ease-in-out, background-size 0.2s; pointer-events: none; }
 
         /* CONTROLS */
         .inline-controls { display: flex; gap: 12px; margin-top: 12px; z-index: 15; }
-        .inline-btn {
-            background: rgba(255, 255, 255, 0.15); border: none; color: white; padding: 10px 20px;
-            border-radius: 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
-            backdrop-filter: blur(5px); transition: background 0.2s, transform 0.1s; pointer-events: auto !important;
-        }
+        .inline-btn { background: rgba(255, 255, 255, 0.15); border: none; color: white; padding: 10px 20px; border-radius: 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(5px); transition: background 0.2s, transform 0.1s; pointer-events: auto !important; }
         .inline-btn:active { background: rgba(255, 255, 255, 0.3); transform: scale(0.95); }
         .timer-setup-container { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; z-index: 15; }
-        .inline-input {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px;
-            border-radius: 12px; width: 75px; text-align: center; font-size: 1.3rem; font-weight: bold; pointer-events: auto !important;
-        }
+        .inline-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px; border-radius: 12px; width: 75px; text-align: center; font-size: 1.3rem; font-weight: bold; pointer-events: auto !important; }
 
-        .widget-config-btn {
-            position: absolute; top: 15px; right: 15px; background: rgba(30, 30, 30, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.15); color: white; font-size: 1.1rem; padding: 8px;
-            border-radius: 50%; cursor: pointer; backdrop-filter: blur(8px); opacity: 0;
-            transition: opacity 0.3s ease-in-out; z-index: 30; pointer-events: auto !important;
-        }
-        .widget:hover .widget-config-btn, .widget.force-show-gear .widget-config-btn { opacity: 1; }
-
+        /* UI BUTTONS GLOBAL */
         .ui-btn {
-            position: fixed; bottom: 20px; z-index: 100; background: rgba(30,30,30,0.8); border: none;
+            position: fixed; z-index: 100; background: rgba(30,30,30,0.8); border: none;
             color: white; padding: 14px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(10px);
             pointer-events: auto !important; transition: opacity 0.5s ease; opacity: 1;
         }
-        #btn-settings { right: 20px; }
-        #btn-fullscreen { right: 75px; }
+        #btn-add { top: 20px; right: 20px; background: rgba(255, 159, 10, 0.9); }
+        #btn-settings { bottom: 20px; right: 20px; }
+        #btn-fullscreen { bottom: 20px; right: 75px; }
 
         /* MODALS */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(20px); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px;
-        }
-        .modal-content {
-            background: #1c1c1e; width: 100%; max-width: 500px; border-radius: 24px; padding: 25px;
-            border: 1px solid #2c2c2e; max-height: 90vh; overflow-y: auto;
-        }
+        .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: #1c1c1e; width: 100%; max-width: 500px; border-radius: 24px; padding: 25px; border: 1px solid #2c2c2e; max-height: 90vh; overflow-y: auto; }
         .modal h2 { margin-bottom: 15px; color: #ff9f0a; font-size: 1.4rem; }
         .setting-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
         .setting-group.row-layout { flex-direction: row; align-items: center; justify-content: space-between; }
         .setting-group label { color: #8e8e93; font-size: 0.85rem; }
-        .setting-group input, .setting-group select, .setting-group textarea {
-            background: #2c2c2e; border: none; color: white; padding: 10px; border-radius: 8px; font-size: 0.95rem; font-family: inherit;
-        }
+        .setting-group input, .setting-group select, .setting-group textarea { background: #2c2c2e; border: none; color: white; padding: 10px; border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
         .setting-group input[type="color"] { padding: 4px; height: 38px; cursor: pointer; width: 100%; }
         .setting-group input[type="range"] { padding: 0; cursor: pointer; }
         .modal-close-btn { background: #ff9f0a; color: black; border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
         
-        .gradient-pad {
-            width: 100%; height: 130px; background: #2c2c2e; border-radius: 12px; position: relative;
-            overflow: hidden; border: 1px solid rgba(255,255,255,0.15); cursor: crosshair;
-        }
-        .gradient-point {
-            width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.8);
-            position: absolute; transform: translate(-50%, -50%); cursor: move;
-        }
+        .gradient-pad { width: 100%; height: 130px; background: #2c2c2e; border-radius: 12px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); cursor: crosshair; }
+        .gradient-point { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.8); position: absolute; transform: translate(-50%, -50%); cursor: move; }
         .gradient-point.active { border-color: #ff9f0a; scale: 1.2; }
-
-        /* RADIAL LINE PAD */
-        .radial-line-pad {
-            width: 100%; height: 50px; background: #2c2c2e; border-radius: 12px; position: relative;
-            border: 1px solid rgba(255,255,255,0.15); cursor: crosshair; display: flex; align-items: center;
-        }
-        .radial-line-track {
-            width: 100%; height: 6px; background: rgba(255, 255, 255, 0.2); position: absolute; left: 0; top: 22px;
-        }
-        .radial-point {
-            width: 16px; height: 24px; border-radius: 4px; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.8);
-            position: absolute; transform: translate(-50%, -50%); top: 25px; cursor: move;
-        }
+        .radial-line-pad { width: 100%; height: 50px; background: #2c2c2e; border-radius: 12px; position: relative; border: 1px solid rgba(255,255,255,0.15); cursor: crosshair; display: flex; align-items: center; }
+        .radial-line-track { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.2); position: absolute; left: 0; top: 22px; }
+        .radial-point { width: 16px; height: 24px; border-radius: 4px; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.8); position: absolute; transform: translate(-50%, -50%); top: 25px; cursor: move; }
         .radial-point.active { border-color: #ff9f0a; scale: 1.1; }
     </style>
 </head>
 <body id="app-body">
 
+    <button class="ui-btn" id="btn-add" onclick="document.getElementById('addWidgetModal').style.display='flex'">➕</button>
     <button class="ui-btn" id="btn-settings">⚙️</button>
     <button class="ui-btn" id="btn-fullscreen">⛶</button>
 
@@ -301,962 +153,717 @@
         <div id="protection-container">
             <div class="main-slider" id="mainSlider">
                 <div class="page">
-                    <div class="split-layout">
-                        
-                        <div class="widget-column" id="col-left" data-side="left">
-                            <div class="widget-track" id="track-left">
-                                <div class="widget" data-id="digital-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('digital-l')">⚙️</button>
-                                    <div class="digital-clock" id="digi-time-l">00:00<span class="seconds">00</span></div>
-                                    <div class="date-sub" id="digi-date-l">Lade...</div>
-                                </div>
-                                <div class="widget" data-id="analog-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('analog-l')">⚙️</button>
-                                    <div class="analog-container"><canvas class="analog-canvas" id="analogCanvas-l"></canvas></div>
-                                </div>
-                                <div class="widget" data-id="world-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('world-l')">⚙️</button>
-                                    <div class="world-name" id="world-name-l" style="font-size: 1.2rem; opacity:0.7;">Weltuhr</div>
-                                    <div class="world-time" id="world-time-l" style="font-size: 3.5rem; font-weight: bold; margin-top:5px;">00:00</div>
-                                </div>
-                                <div class="widget" data-id="calendar-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('calendar-l')">⚙️</button>
-                                    <div class="cal-month-title" id="cal-month-title-l" style="font-weight: bold; font-size:1.1rem;">Monat</div>
-                                    <div class="calendar-grid" id="calendar-grid-l"></div>
-                                </div>
-                                <div class="widget" data-id="weather-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('weather-l')">⚙️</button>
-                                    <div class="weather-detail-layout" id="we-detail-l">Lade Detailwetter...</div>
-                                </div>
-                                <div class="widget" data-id="hourly-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('hourly-l')">⚙️</button>
-                                    <div class="weather-fullspace-container">
-                                        <div style="font-size:0.9rem; font-weight:bold; margin-bottom:8px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                            <span>12-Stunden Vorhersage</span>
-                                            <span id="hourly-city-l" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Lade...</span>
-                                        </div>
-                                        <div class="hourly-scroll-container" id="hourly-container-l">Lade Stunden-Wetter...</div>
-                                    </div>
-                                </div>
-                                <div class="widget" data-id="daily-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('daily-l')">⚙️</button>
-                                    <div class="weather-fullspace-container">
-                                        <div style="font-size:0.9rem; font-weight:bold; margin-bottom:6px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                            <span>10-Tage Vorhersage</span>
-                                            <span id="daily-city-l" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Lade...</span>
-                                        </div>
-                                        <div class="daily-list-container" id="daily-container-l">Lade Tages-Wetter...</div>
-                                    </div>
-                                </div>
-                                <div class="widget" data-id="photo-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('photo-l')">⚙️</button>
-                                    <div class="inline-photo-widget" id="widget-photo-l"></div>
-                                </div>
-                                <div class="widget" data-id="countdown-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('countdown-l')">⚙️</button>
-                                    <div style="font-size: 1.1rem; margin-bottom: 5px;">Timer</div>
-                                    <div class="timer-setup-container" id="t-setup-l">
-                                        <input type="number" class="inline-input" id="t-input-l" value="5" min="1" max="999">
-                                        <span style="opacity:0.6;">Min</span>
-                                        <button class="inline-btn" onclick="inlineTimerAction('l', 'start')">▶ Start</button>
-                                    </div>
-                                    <div class="timer-run-container" id="t-run-l" style="display: none;">
-                                        <div class="count-display" id="count-display-l" style="font-size: 3.8rem; font-weight: bold;">05:00</div>
-                                        <div class="inline-controls">
-                                            <button class="inline-btn" id="t-btn-pause-l" onclick="inlineTimerAction('l', 'toggle')">⏸</button>
-                                            <button class="inline-btn" onclick="inlineTimerAction('l', 'reset')">⟲</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="widget" data-id="stopwatch-l">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('stopwatch-l')">⚙️</button>
-                                    <div style="font-size: 1.1rem; margin-bottom: 5px;">Stoppuhr</div>
-                                    <div class="stopwatch-display" id="stopwatch-display-l" style="font-size: 3.3rem; font-weight: bold; font-variant-numeric: tabular-nums;">00:00,00</div>
-                                    <div class="inline-controls">
-                                        <button class="inline-btn" id="sw-btn-toggle-l" onclick="inlineStopwatchAction('l', 'toggle')">▶ Start</button>
-                                        <button class="inline-btn" onclick="inlineStopwatchAction('l', 'reset')">⟲ Reset</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="widget-column" id="col-right" data-side="right">
-                            <div class="widget-track" id="track-right">
-                                <div class="widget" data-id="digital-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('digital-r')">⚙️</button>
-                                    <div class="digital-clock" id="digi-time-r">00:00<span class="seconds">00</span></div>
-                                    <div class="date-sub" id="digi-date-r">Lade...</div>
-                                </div>
-                                <div class="widget" data-id="analog-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('analog-r')">⚙️</button>
-                                    <div class="analog-container"><canvas class="analog-canvas" id="analogCanvas-r"></canvas></div>
-                                </div>
-                                <div class="widget" data-id="world-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('world-r')">⚙️</button>
-                                    <div class="world-name" id="world-name-r" style="font-size: 1.2rem; opacity:0.7;">Weltuhr</div>
-                                    <div class="world-time" id="world-time-r" style="font-size: 3.5rem; font-weight: bold; margin-top:5px;">00:00</div>
-                                </div>
-                                <div class="widget" data-id="calendar-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('calendar-r')">⚙️</button>
-                                    <div class="cal-month-title" id="cal-month-title-r" style="font-weight: bold; font-size:1.1rem;">Monat</div>
-                                    <div class="calendar-grid" id="calendar-grid-r"></div>
-                                </div>
-                                <div class="widget" data-id="weather-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('weather-r')">⚙️</button>
-                                    <div class="weather-detail-layout" id="we-detail-r">Lade Detailwetter...</div>
-                                </div>
-                                <div class="widget" data-id="hourly-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('hourly-r')">⚙️</button>
-                                    <div class="weather-fullspace-container">
-                                        <div style="font-size:0.9rem; font-weight:bold; margin-bottom:8px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                            <span>12-Stunden Vorhersage</span>
-                                            <span id="hourly-city-r" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Lade...</span>
-                                        </div>
-                                        <div class="hourly-scroll-container" id="hourly-container-r">Lade Stunden-Wetter...</div>
-                                    </div>
-                                </div>
-                                <div class="widget" data-id="daily-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('daily-r')">⚙️</button>
-                                    <div class="weather-fullspace-container">
-                                        <div style="font-size:0.9rem; font-weight:bold; margin-bottom:6px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                            <span>10-Tage Vorhersage</span>
-                                            <span id="daily-city-r" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Lade...</span>
-                                        </div>
-                                        <div class="daily-list-container" id="daily-container-r">Lade Tages-Wetter...</div>
-                                    </div>
-                                </div>
-                                <div class="widget" data-id="photo-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('photo-r')">⚙️</button>
-                                    <div class="inline-photo-widget" id="widget-photo-r"></div>
-                                </div>
-                                <div class="widget" data-id="countdown-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('countdown-r')">⚙️</button>
-                                    <div style="font-size: 1.1rem; margin-bottom: 5px;">Timer</div>
-                                    <div class="timer-setup-container" id="t-setup-r">
-                                        <input type="number" class="inline-input" id="t-input-r" value="15" min="1" max="999">
-                                        <span style="opacity:0.6;">Min</span>
-                                        <button class="inline-btn" onclick="inlineTimerAction('r', 'start')">▶ Start</button>
-                                    </div>
-                                    <div class="timer-run-container" id="t-run-r" style="display: none;">
-                                        <div class="count-display" id="count-display-r" style="font-size: 3.8rem; font-weight: bold;">15:00</div>
-                                        <div class="inline-controls">
-                                            <button class="inline-btn" id="t-btn-pause-r" onclick="inlineTimerAction('r', 'toggle')">⏸</button>
-                                            <button class="inline-btn" onclick="inlineTimerAction('r', 'reset')">⟲</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="widget" data-id="stopwatch-r">
-                                    <button class="widget-config-btn" onclick="openWidgetSettings('stopwatch-r')">⚙️</button>
-                                    <div style="font-size: 1.1rem; margin-bottom: 5px;">Stoppuhr</div>
-                                    <div class="stopwatch-display" id="stopwatch-display-r" style="font-size: 3.3rem; font-weight: bold; font-variant-numeric: tabular-nums;">00:00,00</div>
-                                    <div class="inline-controls">
-                                        <button class="inline-btn" id="sw-btn-toggle-r" onclick="inlineStopwatchAction('r', 'toggle')">▶ Start</button>
-                                        <button class="inline-btn" onclick="inlineStopwatchAction('r', 'reset')">⟲ Reset</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
+                    <div class="dashboard-grid" id="dashboard-grid"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ADD WIDGET MODAL -->
+    <div class="modal" id="addWidgetModal">
+        <div class="modal-content">
+            <h2 data-key="add_widget_title">➕ Neues Widget</h2>
+            <div class="setting-group">
+                <label data-key="select_type">Widget-Typ auswählen</label>
+                <select id="new-widget-type">
+                    <option value="digital" data-key="opt_digital">Digitaluhr</option>
+                    <option value="analog" data-key="opt_analog">Analoguhr</option>
+                    <option value="world" data-key="opt_world">Weltuhr</option>
+                    <option value="calendar" data-key="opt_calendar">Kalender</option>
+                    <option value="weather" data-key="opt_weather">Wetter (Aktuell)</option>
+                    <option value="hourly" data-key="opt_hourly">Wetter (12 Stunden)</option>
+                    <option value="daily" data-key="opt_daily">Wetter (10 Tage)</option>
+                    <option value="photo" data-key="opt_photo">Foto-Diashow</option>
+                    <option value="countdown" data-key="opt_countdown">Timer</option>
+                    <option value="stopwatch" data-key="opt_stopwatch">Stoppuhr</option>
+                </select>
+            </div>
+            <button class="modal-close-btn" onclick="confirmAddWidget()" data-key="btn_add">Hinzufügen</button>
+            <button class="modal-close-btn" style="background:#444; color:#fff;" onclick="document.getElementById('addWidgetModal').style.display='none'" data-key="btn_cancel">Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- GLOBAL SYSTEM SETTINGS MODAL -->
     <div class="modal" id="settingsModal">
         <div class="modal-content">
-            <h2>🌐 System-Einstellungen</h2>
-            <div class="setting-group">
-                <label>Dashboard-Größe (Skalierung)</label>
-                <input type="range" id="cfg-global-scale" min="0.7" max="1.3" step="0.05" value="1.0">
-            </div>
-            <div class="setting-group">
-                <label>System-Sprache</label>
-                <select id="cfg-global-lang">
-                    <option value="de-DE">Deutsch (de-DE)</option>
-                    <option value="en-US">English (en-US)</option>
-                </select>
-            </div>
-            <div class="setting-group">
-                <label>Hintergrundtyp</label>
-                <select id="cfg-global-bg-type" onchange="toggleBgPicker('global')">
-                    <option value="solid">Einfache Farbe</option>
-                    <option value="mesh">2D Mesh Farbverlauf</option>
-                </select>
-            </div>
-            <div id="global-solid-container" class="setting-group">
-                <label>Hintergrundfarbe</label>
-                <input type="color" id="cfg-global-bg-solid" value="#000000">
-            </div>
-            <div id="global-mesh-container" class="setting-group" style="display:none;">
-                <label>Mesh Editor (Klicken um Punkte zu setzen)</label>
-                <div class="gradient-pad" id="global-gradient-pad"></div>
-                <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
-                    <input type="color" id="global-point-color" value="#ff9f0a">
-                    <button type="button" class="inline-btn" id="global-btn-del-point" style="padding:6px 12px; font-size:0.85rem;">Löschen</button>
-                    <div style="display:flex; flex-direction:column; font-size:0.75rem;">
-                        <label>Basis</label>
-                        <input type="color" id="global-mesh-base" value="#000000" style="height:28px; padding:0;">
-                    </div>
+            <h2 data-key="sys_settings_title">🌐 System-Einstellungen</h2>
+            <div class="setting-group"><label data-key="global_scale">Dashboard-Größe (Skalierung)</label><input type="range" id="cfg-global-scale" min="0.7" max="1.3" step="0.05" value="1.0"></div>
+            <div class="setting-group"><label data-key="sys_lang">System-Sprache</label><select id="cfg-global-lang"><option value="de-DE">Deutsch (de-DE)</option><option value="en-US">English (en-US)</option></select></div>
+            <div class="setting-group"><label data-key="bg_type">Hintergrundtyp</label><select id="cfg-global-bg-type" onchange="toggleBgPicker('global')"><option value="solid" data-key="opt_solid">Einfache Farbe</option><option value="linear" data-key="opt_linear">Linearer Farbverlauf</option><option value="mesh" data-key="opt_mesh">2D Mesh Farbverlauf</option></select></div>
+            
+            <div id="global-solid-container" class="setting-group"><label data-key="bg_color_label">Hintergrundfarbe</label><input type="color" id="cfg-global-bg-solid" value="#000000"></div>
+            
+            <div id="global-linear-container" class="setting-group" style="display:none;">
+                <label>Linearer Verlauf Farben</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="color" id="cfg-global-grad-start" value="#ff9f0a">
+                    <input type="color" id="cfg-global-grad-end" value="#0a84ff">
                 </div>
+                <label>Winkel (Grad)</label>
+                <input type="range" id="cfg-global-grad-angle" min="0" max="360" value="135">
             </div>
-            <button class="modal-close-btn" id="btn-close-settings">Schließen & Sichern</button>
+
+            <div id="global-mesh-container" class="setting-group" style="display:none;"><label data-key="mesh_editor">Mesh Editor</label><div class="gradient-pad" id="global-gradient-pad"></div><div style="display:flex; gap:10px; align-items:center; margin-top:5px;"><input type="color" id="global-point-color" value="#ff9f0a"><button type="button" class="inline-btn" id="global-btn-del-point" style="padding:6px 12px; font-size:0.85rem;" data-key="delete_pt">Löschen</button><div style="display:flex; flex-direction:column; font-size:0.75rem;"><label data-key="basis">Basis</label><input type="color" id="global-mesh-base" value="#000000" style="height:28px; padding:0;"></div></div></div>
+            <button class="modal-close-btn" id="btn-close-settings" data-key="close_save">Schließen & Sichern</button>
         </div>
     </div>
 
+    <!-- WIDGET SPECIFIC SETTINGS MODAL -->
     <div class="modal" id="widgetSettingsModal">
         <div class="modal-content">
-            <h2 id="widget-settings-title">Widget Anpassung</h2>
+            <h2 id="widget-settings-title" data-key="widget_custom_title">Widget Anpassung</h2>
             <input type="hidden" id="current-widget-id">
+            <div class="setting-group row-layout"><label style="font-weight: bold; color: white;" data-key="text_bold">Text fett anzeigen (Bold)</label><input type="checkbox" id="widget-is-bold" style="width:22px; height:22px;"></div>
+            <div class="setting-group"><label data-key="opacity">Hintergrund-Transparenz (0 = Rand verschwindet)</label><input type="range" id="widget-opacity" min="0" max="1" step="0.05" value="0.85"></div>
+            <div class="setting-group"><label data-key="widget_bg_type">Widget Hintergrundtyp</label><select id="widget-bg-type" onchange="toggleBgPicker('widget')"><option value="solid" data-key="opt_solid">Einfache Farbe</option><option value="linear" data-key="opt_linear">Linearer Farbverlauf</option><option value="mesh" data-key="opt_mesh">2D Farbverlauf (Mesh)</option></select></div>
             
-            <div class="setting-group row-layout">
-                <label style="font-weight: bold; color: white;">Text fett anzeigen (Bold)</label>
-                <input type="checkbox" id="widget-is-bold" style="width:22px; height:22px;">
-            </div>
-
-            <div class="setting-group">
-                <label>Hintergrund-Transparenz (0 = Rand verschwindet)</label>
-                <input type="range" id="widget-opacity" min="0" max="1" step="0.05" value="0.85">
-            </div>
-
-            <div class="setting-group">
-                <label>Widget Hintergrundtyp</label>
-                <select id="widget-bg-type" onchange="toggleBgPicker('widget')">
-                    <option value="solid">Einfache Farbe</option>
-                    <option value="mesh">2D Farbverlauf (Mesh)</option>
-                </select>
-            </div>
-            <div class="setting-group" id="widget-solid-container">
-                <label>Hintergrundfarbe</label>
-                <input type="color" id="widget-color-bg" value="#111111">
-            </div>
-            <div id="widget-mesh-container" class="setting-group" style="display:none;">
-                <label>2D Verlauf Editor</label>
-                <div class="gradient-pad" id="widget-gradient-pad"></div>
-                <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
-                    <input type="color" id="widget-point-color" value="#0a84ff">
-                    <button type="button" class="inline-btn" id="widget-btn-del-point" style="padding:6px 12px; font-size:0.85rem;">Entfernen</button>
-                    <div style="display:flex; flex-direction:column; font-size:0.75rem;">
-                        <label>Basis</label>
-                        <input type="color" id="widget-mesh-base" value="#111111" style="height:28px; padding:0;">
-                    </div>
+            <div class="setting-group" id="widget-solid-container"><label data-key="bg_color_label">Hintergrundfarbe</label><input type="color" id="widget-color-bg" value="#111111"></div>
+            
+            <div id="widget-linear-container" class="setting-group" style="display:none;">
+                <label>Linearer Verlauf Farben</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="color" id="widget-grad-start" value="#ff9f0a">
+                    <input type="color" id="widget-grad-end" value="#0a84ff">
                 </div>
+                <label>Winkel (Grad)</label>
+                <input type="range" id="widget-grad-angle" min="0" max="360" value="135">
             </div>
 
-            <div class="setting-group">
-                <label>Textfarbe Hauptinhalt</label>
-                <input type="color" id="widget-color-text" value="#ffffff">
-            </div>
-            <div class="setting-group">
-                <label>System-Akzentfarbe</label>
-                <input type="color" id="widget-color-accent" value="#ff9f0a">
-            </div>
+            <div id="widget-mesh-container" class="setting-group" style="display:none;"><label data-key="mesh_editor">2D Verlauf Editor</label><div class="gradient-pad" id="widget-gradient-pad"></div><div style="display:flex; gap:10px; align-items:center; margin-top:5px;"><input type="color" id="widget-point-color" value="#0a84ff"><button type="button" class="inline-btn" id="widget-btn-del-point" style="padding:6px 12px; font-size:0.85rem;" data-key="delete_pt">Entfernen</button><div style="display:flex; flex-direction:column; font-size:0.75rem;"><label data-key="basis">Basis</label><input type="color" id="widget-mesh-base" value="#111111" style="height:28px; padding:0;"></div></div></div>
+            <div class="setting-group"><label data-key="text_color">Textfarbe Hauptinhalt</label><input type="color" id="widget-color-text" value="#ffffff"></div>
+            <div class="setting-group"><label data-key="accent_color">System-Akzentfarbe</label><input type="color" id="widget-color-accent" value="#ff9f0a"></div>
             
-            <div class="setting-group" id="group-city" style="display:none;">
-                <label>Stadt für Wetterdaten</label>
-                <input type="text" id="widget-city-input" value="München">
-            </div>
-
+            <div class="setting-group" id="group-city" style="display:none;"><label data-key="city_label">Stadt für Wetterdaten</label><input type="text" id="widget-city-input" value="München"></div>
+            
             <div class="setting-group" id="group-analog-clockface" style="display:none;">
-                <label>Ziffernblatt-Typ</label>
+                <label data-key="face_type">Ziffernblatt-Typ</label>
                 <select id="widget-analog-face-type">
-                    <option value="none">Nur Striche (Leer)</option>
-                    <option value="main">Hauptzahlen (12, 3, 6, 9)</option>
-                    <option value="all">Alle Zahlen (1-12)</option>
+                    <option value="none" data-key="face_none">Nur Striche (Leer)</option>
+                    <option value="main" data-key="face_main">Hauptzahlen (12, 3, 6, 9)</option>
+                    <option value="all" data-key="face_all">Alle Zahlen (1-12)</option>
                 </select>
-
-                <label style="margin-top:10px;">Zifferblatt-Hintergrundtyp</label>
+                <label style="margin-top:10px;" data-key="face_bg_type">Zifferblatt-Hintergrundtyp</label>
                 <select id="widget-analog-bg-type" onchange="toggleBgPicker('analog')">
-                    <option value="solid">Einfache Farbe</option>
-                    <option value="mesh">2D Farbverlauf (Mesh)</option>
-                    <option value="radial1d">Radialer Verlauf (Linien-Editor)</option>
-                    <option value="image">Bild</option>
+                    <option value="solid" data-key="opt_solid">Einfache Farbe</option>
+                    <option value="linear" data-key="opt_linear">Linearer Farbverlauf</option>
+                    <option value="mesh" data-key="opt_mesh">2D Farbverlauf (Mesh)</option>
+                    <option value="radial1d" data-key="radial_grad">Radialer Verlauf (Linien-Editor)</option>
+                    <option value="image" data-key="image_label">Bild</option>
                 </select>
-                <div class="setting-group" id="analog-solid-container" style="margin-top:10px;">
-                    <label>Zifferblatt-Farbe</label>
-                    <input type="color" id="widget-analog-solid-color" value="#1c1c1e">
-                </div>
-                <div id="analog-mesh-container" class="setting-group" style="display:none; margin-top:10px;">
-                    <label>Zifferblatt Mesh Editor</label>
-                    <div class="gradient-pad" id="analog-gradient-pad"></div>
-                    <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
-                        <input type="color" id="analog-point-color" value="#ff9f0a">
-                        <button type="button" class="inline-btn" id="analog-btn-del-point" style="padding:6px 12px; font-size:0.85rem;">Löschen</button>
-                        <div style="display:flex; flex-direction:column; font-size:0.75rem;">
-                            <label>Basis</label>
-                            <input type="color" id="analog-mesh-base" value="#1c1c1e" style="height:28px; padding:0;">
-                        </div>
+                <div class="setting-group" id="analog-solid-container" style="margin-top:10px;"><label data-key="bg_color_label">Zifferblatt-Farbe</label><input type="color" id="widget-analog-solid-color" value="#1c1c1e"></div>
+                
+                <div id="analog-linear-container" class="setting-group" style="display:none; margin-top:10px;">
+                    <label>Zifferblatt Linearer Verlauf</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="color" id="widget-analog-grad-start" value="#1c1c1e">
+                        <input type="color" id="widget-analog-grad-end" value="#3a3a3c">
                     </div>
+                    <label>Winkel (Grad)</label>
+                    <input type="range" id="widget-analog-grad-angle" min="0" max="360" value="135">
                 </div>
-                <div id="analog-radial1d-container" class="setting-group" style="display:none; margin-top:10px;">
-                    <label>Radialer Linien-Editor (Klicken um Punkte zu setzen)</label>
-                    <div class="radial-line-pad" id="analog-radial-pad">
-                        <div class="radial-line-track"></div>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
-                        <input type="color" id="analog-radial-point-color" value="#000000">
-                        <button type="button" class="inline-btn" id="analog-btn-del-radial-point" style="padding:6px 12px; font-size:0.85rem;">Löschen</button>
-                        <div style="font-size:0.75rem; color:#8e8e93;">Mitte (Links) ➔ Außen (Rechts)</div>
-                    </div>
-                </div>
-                <div id="analog-image-container" class="setting-group" style="display:none; margin-top:10px;">
-                    <label>Zifferblatt Bild hochladen</label>
-                    <input type="file" id="widget-analog-image-file" accept="image/*">
-                </div>
-            </div>
 
-            <div class="setting-group" id="group-photo-opts" style="display:none;">
-                <label>Foto Ausrichtungsformat</label>
-                <select id="widget-photo-fit">
-                    <option value="cover">Ausfüllen (Cover)</option>
-                    <option value="contain">Einpassen / Ganzes Bild (Contain)</option>
-                </select>
-                <label style="margin-top:8px;">Neue Fotos hochladen</label>
-                <input type="file" id="widget-photo-files" multiple accept="image/*">
+                <div id="analog-mesh-container" class="setting-group" style="display:none; margin-top:10px;"><label data-key="mesh_editor">Zifferblatt Mesh Editor</label><div class="gradient-pad" id="analog-gradient-pad"></div><div style="display:flex; gap:10px; align-items:center; margin-top:5px;"><input type="color" id="analog-point-color" value="#ff9f0a"><button type="button" class="inline-btn" id="analog-btn-del-point" style="padding:6px 12px; font-size:0.85rem;" data-key="delete_pt">Löschen</button><div style="display:flex; flex-direction:column; font-size:0.75rem;"><label data-key="basis">Basis</label><input type="color" id="analog-mesh-base" value="#1c1c1e" style="height:28px; padding:0;"></div></div></div>
+                <div id="analog-radial1d-container" class="setting-group" style="display:none; margin-top:10px;"><label data-key="radial_grad">Radialer Linien-Editor</label><div class="radial-line-pad" id="analog-radial-pad"><div class="radial-line-track"></div></div><div style="display:flex; gap:10px; align-items:center; margin-top:5px;"><input type="color" id="analog-radial-point-color" value="#000000"><button type="button" class="inline-btn" id="analog-btn-del-radial-point" style="padding:6px 12px; font-size:0.85rem;" data-key="delete_pt">Löschen</button></div></div>
+                <div id="analog-image-container" class="setting-group" style="display:none; margin-top:10px;"><label data-key="upload_face">Zifferblatt Bild hochladen</label><input type="file" id="widget-analog-image-file" accept="image/*"></div>
             </div>
-
-            <div class="setting-group" id="group-timezone" style="display:none;">
-                <label>Zeitzone (z.B. America/New_York)</label>
-                <input type="text" id="widget-timezone-input" value="Europe/Berlin">
-            </div>
-
-            <button class="modal-close-btn" id="btn-save-widget-settings">Widget anwenden</button>
+            
+            <div class="setting-group" id="group-photo-opts" style="display:none;"><label data-key="photo_fit">Foto Ausrichtungsformat</label><select id="widget-photo-fit"><option value="cover" data-key="fit_cover">Ausfüllen (Cover)</option><option value="contain" data-key="fit_contain">Einpassen (Contain)</option></select><label style="margin-top:8px;" data-key="upload_photos">Neue Fotos hochladen</label><input type="file" id="widget-photo-files" multiple accept="image/*"></div>
+            <div class="setting-group" id="group-timezone" style="display:none;"><label data-key="timezone_label">Zeitzone (z.B. America/New_York)</label><input type="text" id="widget-timezone-input" value="Europe/Berlin"></div>
+            <button class="modal-close-btn" id="btn-save-widget-settings" data-key="widget_apply">Widget anwenden</button>
         </div>
     </div>
 
     <script>
-        const MAX_WIDGETS = 9;
-        let globalConfig = { scale: 1.0, lang: 'de-DE', bgType: 'solid', bgSolid: '#000000', bgBase: '#000000', bgMeshPoints: [] };
+        // --- TRANSLATION DATA ---
+        const uiTranslations = {
+            'de-DE': {
+                add_widget_title: "➕ Neues Widget", select_type: "Widget-Typ auswählen", opt_digital: "Digitaluhr", opt_analog: "Analoguhr", opt_world: "Weltuhr", opt_calendar: "Kalender", opt_weather: "Wetter (Aktuell)", opt_hourly: "Wetter (12 Stunden)", opt_daily: "Wetter (10 Tage)", opt_photo: "Foto-Diashow", opt_countdown: "Timer", opt_stopwatch: "Stoppuhr", btn_add: "Hinzufügen", btn_cancel: "Abbrechen",
+                sys_settings_title: "🌐 System-Einstellungen", global_scale: "Dashboard-Größe (Skalierung)", sys_lang: "System-Sprache", bg_type: "Hintergrundtyp", opt_solid: "Einfache Farbe", opt_linear: "Linearer Farbverlauf", opt_mesh: "2D Mesh Farbverlauf", bg_color_label: "Hintergrundfarbe", mesh_editor: "Mesh Editor", delete_pt: "Löschen", basis: "Basis", close_save: "Schließen & Sichern",
+                widget_custom_title: "Widget Anpassung", text_bold: "Text fett anzeigen (Bold)", opacity: "Hintergrund-Transparenz (0 = Rand verschwindet)", widget_bg_type: "Widget Hintergrundtyp", text_color: "Textfarbe Hauptinhalt", accent_color: "System-Akzentfarbe", city_label: "Stadt für Wetterdaten", face_type: "Ziffernblatt-Typ", face_none: "Nur Striche (Leer)", face_main: "Hauptzahlen (12, 3, 6, 9)", face_all: "Alle Zahlen (1-12)", face_bg_type: "Zifferblatt-Hintergrundtyp", radial_grad: "Radialer Verlauf (Linien-Editor)", image_label: "Bild", upload_face: "Zifferblatt Bild hochladen", photo_fit: "Foto Ausrichtungsformat", fit_cover: "Ausfüllen (Cover)", fit_contain: "Einpassen (Contain)", upload_photos: "Neue Fotos hochladen", timezone_label: "Zeitzone (z.B. America/New_York)", widget_apply: "Widget anwenden",
+                confirm_delete: "Dieses Widget wirklich entfernen?"
+            },
+            'en-US': {
+                add_widget_title: "➕ New Widget", select_type: "Select Widget Type", opt_digital: "Digital Clock", opt_analog: "Analog Clock", opt_world: "World Clock", opt_calendar: "Calendar", opt_weather: "Weather (Current)", opt_hourly: "Weather (12 Hours)", opt_daily: "Weather (10 Days)", opt_photo: "Photo Slideshow", opt_countdown: "Timer", opt_stopwatch: "Stopwatch", btn_add: "Add Widget", btn_cancel: "Cancel",
+                sys_settings_title: "🌐 System Settings", global_scale: "Dashboard Scale", sys_lang: "System Language", bg_type: "Background Type", opt_solid: "Solid Color", opt_linear: "Linear Gradient", opt_mesh: "2D Mesh Gradient", bg_color_label: "Background Color", mesh_editor: "Mesh Editor", delete_pt: "Delete", basis: "Base", close_save: "Close & Save",
+                widget_custom_title: "Widget Customization", text_bold: "Display Text Bold", opacity: "Background Opacity (0 = border disappears)", widget_bg_type: "Widget Background Type", text_color: "Main Text Color", accent_color: "System Accent Color", city_label: "City for Weather Data", face_type: "Clockface Type", face_none: "Ticks Only (Empty)", face_main: "Main Numbers (12, 3, 6, 9)", face_all: "All Numbers (1-12)", face_bg_type: "Clockface Background Type", radial_grad: "Radial Gradient (Line Editor)", image_label: "Image", upload_face: "Upload Clockface Image", photo_fit: "Photo Fit Format", fit_cover: "Fill (Cover)", fit_contain: "Fit (Contain)", upload_photos: "Upload New Photos", timezone_label: "Timezone (e.g. America/New_York)", widget_apply: "Apply Widget",
+                confirm_delete: "Really remove this widget?"
+            }
+        };
 
-        const defaultPhotos = [
-            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200",
-            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200"
+        function translateStaticUI() {
+            const lang = globalConfig.lang || 'de-DE';
+            const dictionary = uiTranslations[lang] || uiTranslations['de-DE'];
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if(dictionary[key]) el.innerText = dictionary[key];
+            });
+        }
+
+        // --- KONFIGURATIONEN ---
+        let globalConfig = { scale: 1.0, lang: 'de-DE', bgType: 'solid', bgSolid: '#000000', bgBase: '#000000', bgMeshPoints: [], bgGradStart: '#ff9f0a', bgGradEnd: '#0a84ff', bgGradAngle: 135 };
+        const defaultPhotos = [ "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200", "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200" ];
+        const baseConfig = () => ({ text: '#ffffff', accent: '#ff9f0a', bgType: 'solid', bgSolid: '#111111', bgMeshPoints: [], bgBase: '#111111', isBold: false, opacity: 0.85, bgGradStart: '#ff9f0a', bgGradEnd: '#0a84ff', bgGradAngle: 135 });
+        const baseAnalogConfig = () => ({ ...baseConfig(), analogBgType: 'solid', analogSolidColor: '#1c1c1e', analogMeshBase: '#1c1c1e', analogMeshPoints: [], analogRadialPoints: [ { pos: 0, color: '#000000' }, { pos: 100, color: '#3a3a3c' } ], analogFaceType: 'none', analogImgData: null, analogGradientStart: '#1c1c1e', analogGradientEnd: '#3a3a3c', analogGradientAngle: 135 });
+
+        let widgetConfigs = {};
+        // Standard-Status inkl. Startpositionen für stufenloses Layout
+        let defaultDashboardState = [
+            { id: 'digital-init', type: 'digital', w: '320px', h: '280px', left: '50px', top: '50px' },
+            { id: 'weather-init', type: 'weather', w: '320px', h: '280px', left: '400px', top: '50px' }
         ];
 
-        const baseConfig = () => ({
-            text: '#ffffff', accent: '#ff9f0a', bgType: 'solid', bgSolid: '#111111', bgMeshPoints: [], bgBase: '#111111',
-            isBold: false, opacity: 0.85
-        });
-
-        const baseAnalogConfig = () => ({
-            ...baseConfig(),
-            analogBgType: 'solid',
-            analogSolidColor: '#1c1c1e',
-            analogMeshBase: '#1c1c1e',
-            analogMeshPoints: [],
-            analogRadialPoints: [
-                { pos: 0, color: '#000000' },
-                { pos: 100, color: '#3a3a3c' }
-            ],
-            analogFaceType: 'none',
-            analogImgData: null
-        });
-
-        let widgetConfigs = {
-            'digital-l': baseConfig(), 'analog-l': baseAnalogConfig(),
-            'world-l': { ...baseConfig(), tz: 'America/New_York' }, 'calendar-l': baseConfig(),
-            'weather-l': { ...baseConfig(), city: 'München' }, 'hourly-l': { ...baseConfig(), city: 'München' }, 'daily-l': { ...baseConfig(), city: 'München' },
-            'photo-l': { ...baseConfig(), photos: [], interval: 8, fit: 'cover' }, 'countdown-l': baseConfig(), 'stopwatch-l': baseConfig(),
-
-            'digital-r': baseConfig(), 'analog-r': baseAnalogConfig(),
-            'world-r': { ...baseConfig(), tz: 'Europe/London' }, 'calendar-r': baseConfig(),
-            'weather-r': { ...baseConfig(), city: 'Berlin' }, 'hourly-r': { ...baseConfig(), city: 'Berlin' }, 'daily-r': { ...baseConfig(), city: 'Berlin' },
-            'photo-r': { ...baseConfig(), photos: [], interval: 8, fit: 'cover' }, 'countdown-r': baseConfig(), 'stopwatch-r': baseConfig()
-        };
-
-        let uiState = { leftIndex: 0, rightIndex: 0 };
-        let inlineTimers = { 'l': { state: 'setup', endTimestamp: 0, remainingMs: 0 }, 'r': { state: 'setup', endTimestamp: 0, remainingMs: 0 } };
-        let inlineStopwatches = { 'l': { running: false, elapsedMs: 0, startTimestamp: 0 }, 'r': { running: false, elapsedMs: 0, startTimestamp: 0 } };
-        let diashowTimers = {};
-        let sharedWeatherMap = { 'l': null, 'r': null };
-
-        let meshEditors = {
-            global: { points: [], activeIndex: -1, padId: 'global-gradient-pad', colorInpId: 'global-point-color', baseInpId: 'global-mesh-base', delBtnId: 'global-btn-del-point' },
-            widget: { points: [], activeIndex: -1, padId: 'widget-gradient-pad', colorInpId: 'widget-point-color', baseInpId: 'widget-mesh-base', delBtnId: 'widget-btn-del-point' },
-            analog: { points: [], activeIndex: -1, padId: 'analog-gradient-pad', colorInpId: 'analog-point-color', baseInpId: 'analog-mesh-base', delBtnId: 'analog-btn-del-point' }
-        };
-
+        let inlineTimers = {};
+        let inlineStopwatches = {};
+        let diashowTimers = {}; let sharedWeatherMap = {};
+        let meshEditors = { global: { points: [], activeIndex: -1, padId: 'global-gradient-pad', colorInpId: 'global-point-color', baseInpId: 'global-mesh-base', delBtnId: 'global-btn-del-point' }, widget: { points: [], activeIndex: -1, padId: 'widget-gradient-pad', colorInpId: 'widget-point-color', baseInpId: 'widget-mesh-base', delBtnId: 'widget-btn-del-point' }, analog: { points: [], activeIndex: -1, padId: 'analog-gradient-pad', colorInpId: 'analog-point-color', baseInpId: 'analog-mesh-base', delBtnId: 'analog-btn-del-point' } };
         let radialLineEditor = { points: [], activeIndex: -1 };
         let uiButtonsTimeout;
 
-        if (localStorage.getItem('standby_global_v8')) {
-            try { globalConfig = { ...globalConfig, ...JSON.parse(localStorage.getItem('standby_global_v8')) }; } catch(e) {}
-        }
-        if (localStorage.getItem('standby_widgets_v8')) {
-            try { 
-                let loaded = JSON.parse(localStorage.getItem('standby_widgets_v8'));
-                Object.keys(widgetConfigs).forEach(k => { if(loaded[k]) widgetConfigs[k] = { ...widgetConfigs[k], ...loaded[k] }; });
-            } catch(e) {}
-        }
-        if (localStorage.getItem('standby_uistate_v8')) {
-            try { uiState = { ...uiState, ...JSON.parse(localStorage.getItem('standby_uistate_v8')) }; } catch(e) {}
-        }
+        if (localStorage.getItem('standby_global_v8')) try { globalConfig = { ...globalConfig, ...JSON.parse(localStorage.getItem('standby_global_v8')) }; } catch(e) {}
+        if (localStorage.getItem('standby_widgets_v8')) try { widgetConfigs = JSON.parse(localStorage.getItem('standby_widgets_v8')); } catch(e) {}
 
-        const trackLeft = document.getElementById('track-left');
-        const trackRight = document.getElementById('track-right');
         const settingsModal = document.getElementById('settingsModal');
         const widgetModal = document.getElementById('widgetSettingsModal');
+        const grid = document.getElementById('dashboard-grid');
 
         window.addEventListener('DOMContentLoaded', () => {
-            setupMeshPadListeners('global');
-            setupMeshPadListeners('widget');
-            setupMeshPadListeners('analog');
-            setupRadialLineListeners();
-            applyGlobalScale();
-            applyAllWidgetStyles();
+            translateStaticUI();
+            loadDashboardState();
+            initDragDelegation();     // <--- NEU: Stufenloses Verschieben
+            initResizeDelegation();   // <--- Aktualisiert für sauberes Skalieren
             
-            setInterval(updateWidgetsEngine, 40);
+            setupMeshPadListeners('global'); setupMeshPadListeners('widget'); setupMeshPadListeners('analog'); setupRadialLineListeners();
+            applyGlobalScale(); applyAllWidgetStyles();
+            
+            setInterval(updateWidgetsEngine, 16);
             setInterval(weatherFetchCycle, 300000);
-            
-            initTouchAndScroll();
-            initBurnInProtection();
-            setupAllDiashows();
-            updateTrackTransforms();
-            initAutoHideUI(); 
-            
-            document.querySelectorAll('.hourly-scroll-container').forEach(enableDragScroll);
-            document.querySelectorAll('.daily-list-container').forEach(enableDragScrollY);
-            
-            ['l', 'r'].forEach(sfx => fetchWeatherMasterData(sfx));
+            initBurnInProtection(); initAutoHideUI(); 
         });
 
-        function applyGlobalScale() {
-            document.documentElement.style.setProperty('--global-scale', globalConfig.scale || 1.0);
+        // --- DYNAMISCHES HTML GENERIEREN ---
+        function getWidgetHTML(id, type) {
+            const isEn = globalConfig.lang.startsWith('en');
+            let content = '';
+            
+            if(type === 'digital') content = `<div class="digital-clock" id="digi-time-${id}">00:00<span class="seconds">00</span></div><div class="date-sub" id="digi-date-${id}">${isEn ? 'Loading...' : 'Lade...'}</div>`;
+            else if(type === 'analog') content = `<div class="analog-container"><canvas class="analog-canvas" id="analogCanvas-${id}"></canvas></div>`;
+            else if(type === 'world') content = `<div class="world-name" id="world-name-${id}" style="font-size: 1.2rem; opacity:0.7;">${isEn ? 'World Clock' : 'Weltuhr'}</div><div class="world-time" id="world-time-${id}" style="font-size: clamp(2rem, 3.5vw, 4rem); font-weight: bold; margin-top:5px;">00:00</div>`;
+            else if(type === 'calendar') content = `<div class="cal-month-title" id="cal-month-title-${id}" style="font-weight: bold; font-size:1.1rem;">${isEn ? 'Month' : 'Monat'}</div><div class="calendar-grid" id="calendar-grid-${id}"></div>`;
+            else if(type === 'weather') content = `<div class="weather-detail-layout" id="we-detail-${id}">${isEn ? 'Loading details...' : 'Lade Detailwetter...'}</div>`;
+            else if(type === 'hourly') content = `<div class="weather-fullspace-container"><div style="font-size:0.9rem; font-weight:bold; margin-bottom:8px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;"><span>${isEn ? '12-Hours' : '12-Stunden'}</span><span id="hourly-city-${id}" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">${isEn ? 'Loading...' : 'Lade...'}</span></div><div class="hourly-scroll-container drag-scroll" id="hourly-container-${id}">${isEn ? 'Loading hourly weather...' : 'Lade Stunden-Wetter...'}</div></div>`;
+            else if(type === 'daily') content = `<div class="weather-fullspace-container"><div style="font-size:0.9rem; font-weight:bold; margin-bottom:6px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;"><span>${isEn ? '10-Days' : '10-Tage'}</span><span id="daily-city-${id}" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">${isEn ? 'Loading...' : 'Lade...'}</span></div><div class="daily-list-container drag-scroll-y" id="daily-container-${id}">${isEn ? 'Loading daily weather...' : 'Lade Tages-Wetter...'}</div></div>`;
+            else if(type === 'photo') content = `<div class="inline-photo-widget" id="widget-photo-${id}"></div>`;
+            else if(type === 'countdown') content = `<div style="font-size: 1.1rem; margin-bottom: 5px;">Timer</div><div class="timer-setup-container" id="t-setup-${id}"><input type="number" class="inline-input" id="t-input-${id}" value="5" min="1" max="999"><span>${isEn ? 'Min' : 'Min'}</span><button class="inline-btn" onclick="inlineTimerAction('${id}', 'start')">▶ Start</button></div><div class="timer-run-container" id="t-run-${id}" style="display: none;"><div class="count-display" id="count-display-${id}" style="font-size: 3.8rem; font-weight: bold;">05:00</div><div class="inline-controls"><button class="inline-btn" id="t-btn-pause-${id}" onclick="inlineTimerAction('${id}', 'toggle')">⏸</button><button class="inline-btn" onclick="inlineTimerAction('${id}', 'reset')">⟲</button></div></div>`;
+            else if(type === 'stopwatch') content = `<div style="font-size: 1.1rem; margin-bottom: 5px;">${isEn ? 'Stopwatch' : 'Stoppuhr'}</div><div class="stopwatch-display" id="stopwatch-display-${id}" style="font-size: clamp(2rem, 3.5vw, 3.5rem); font-weight: bold; font-variant-numeric: tabular-nums;">00:00,00</div><div class="inline-controls"><button class="inline-btn" id="sw-btn-toggle-${id}" onclick="inlineStopwatchAction('${id}', 'toggle')">▶ Start</button><button class="inline-btn" onclick="inlineStopwatchAction('${id}', 'reset')">⟲ Reset</button></div>`;
+
+            return `
+            <div class="widget" data-id="${id}" data-type="${type}">
+                <button class="widget-delete-btn" onclick="deleteWidget(this)">❌</button>
+                <div class="resize-handle"></div>
+                <button class="widget-config-btn" onclick="openWidgetSettings('${id}')">⚙️</button>
+                ${content}
+            </div>`;
         }
 
-        function initAutoHideUI() {
-            const showUI = () => {
-                const btnS = document.getElementById('btn-settings'); const btnF = document.getElementById('btn-fullscreen');
-                btnS.style.opacity = '1'; btnS.style.pointerEvents = 'auto';
-                btnF.style.opacity = '1'; btnF.style.pointerEvents = 'auto';
-                clearTimeout(uiButtonsTimeout);
-                uiButtonsTimeout = setTimeout(() => {
-                    btnS.style.opacity = '0'; btnS.style.pointerEvents = 'none';
-                    btnF.style.opacity = '0'; btnF.style.pointerEvents = 'none';
-                }, 3000);
-            };
-            ['mousemove', 'touchstart', 'click'].forEach(evt => window.addEventListener(evt, showUI, { passive: true }));
-            showUI();
-        }
-
-        function flashGearIcon(trackSide, currentIndex) {
-            const track = trackSide === 'left' ? trackLeft : trackRight;
-            const targetWidget = track.children[currentIndex];
-            if (targetWidget) {
-                targetWidget.classList.add('force-show-gear');
-                if (targetWidget.timeoutRef) clearTimeout(targetWidget.timeoutRef);
-                targetWidget.timeoutRef = setTimeout(() => targetWidget.classList.remove('force-show-gear'), 2500);
-            }
-        }
-
-        function updateTrackTransforms() {
-            trackLeft.style.transform = `translateY(-${uiState.leftIndex * 100}%)`;
-            trackRight.style.transform = `translateY(-${uiState.rightIndex * 100}%)`;
-            localStorage.setItem('standby_uistate_v8', JSON.stringify(uiState));
-        }
-
-        function compileMeshGradientCSS(points, baseColor) {
-            if(!points || points.length === 0) return baseColor;
-            const grads = points.map(p => `radial-gradient(circle at ${p.x}% ${p.y}%, ${p.color} 0%, transparent 75%)`);
-            return `${grads.join(', ')}, ${baseColor}`;
-        }
-
-        function hexToRgb(hex) {
-            let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-            hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
-            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '15,15,15';
-        }
-
-        function applyAllWidgetStyles() {
-            const body = document.getElementById('app-body');
-            body.style.background = globalConfig.bgType === 'mesh' ? compileMeshGradientCSS(globalConfig.bgMeshPoints, globalConfig.bgBase) : (globalConfig.bgSolid || '#000000');
-
-            Object.keys(widgetConfigs).forEach(id => {
-                const el = document.querySelector(`[data-id="${id}"]`); if(!el) return;
-                const conf = widgetConfigs[id];
-                const op = conf.opacity ?? 0.85;
-                
-                if (op <= 0) el.style.border = "none";
-                else el.style.border = "1px solid rgba(255, 255, 255, 0.15)";
-                el.style.boxShadow = "none";
-
-                let baseBg = conf.bgType === 'mesh' ? compileMeshGradientCSS(conf.bgMeshPoints, conf.bgBase) : (conf.bgSolid || '#111111');
-                if(conf.bgType === 'solid') el.style.background = `rgba(${hexToRgb(conf.bgSolid)}, ${op})`;
-                else el.style.background = baseBg; 
-                
-                el.style.backdropFilter = 'none'; el.style.webkitBackdropFilter = 'none';
-                el.style.fontWeight = conf.isBold ? '700' : 'normal';
-                if(conf.text) el.style.color = conf.text;
-
-                if(id.startsWith('photo')) {
-                    const pic = el.querySelector('.inline-photo-widget');
-                    if(pic) pic.style.backgroundSize = conf.fit || 'cover';
+        // --- DASHBOARD CORE ---
+        function loadDashboardState() {
+            let saved = localStorage.getItem('standby_dashboard_state');
+            let state = saved ? JSON.parse(saved) : defaultDashboardState;
+            grid.innerHTML = '';
+            
+            state.forEach(item => {
+                if(!widgetConfigs[item.id]) {
+                    widgetConfigs[item.id] = (item.type === 'analog') ? baseAnalogConfig() : baseConfig();
+                    if(['weather', 'hourly', 'daily'].includes(item.type)) widgetConfigs[item.id].city = 'München';
+                    if(item.type === 'world') widgetConfigs[item.id].tz = 'Europe/Berlin';
                 }
+                grid.insertAdjacentHTML('beforeend', getWidgetHTML(item.id, item.type));
+                let wEl = grid.lastElementChild;
+                wEl.style.setProperty('--widget-w', item.w); wEl.style.setProperty('--widget-h', item.h);
+                
+                // Position setzen
+                wEl.style.left = item.left || '50px';
+                wEl.style.top = item.top || '50px';
+                
+                if(['weather', 'hourly', 'daily'].includes(item.type)) fetchWeatherMasterData(item.id);
+                if(item.type === 'photo') setupDiashowInstance(item.id);
+                if(item.type === 'hourly' || item.type === 'daily') enableDragScrollLocal(wEl);
             });
-            buildCalendar('l'); buildCalendar('r');
-            buildWeatherUIComponents('l'); buildWeatherUIComponents('r');
+            localStorage.setItem('standby_widgets_v8', JSON.stringify(widgetConfigs));
         }
 
-        function drawAnalogClock(id, now, conf) {
-            const canvas = document.getElementById(id); if(!canvas) return;
-            const ctx = canvas.getContext('2d'); const displaySize = 230; const dpr = window.devicePixelRatio || 1;
-            if (canvas.width !== displaySize * dpr) { canvas.width = displaySize * dpr; canvas.height = displaySize * dpr; canvas.style.width = `${displaySize}px`; canvas.style.height = `${displaySize}px`; }
-            ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.scale(dpr, dpr);
-            let radius = displaySize / 2; ctx.translate(radius, radius); radius = radius * 0.88;
+        function saveDashboardState() {
+            const state = Array.from(grid.children).map(w => ({
+                id: w.getAttribute('data-id'), type: w.getAttribute('data-type'),
+                w: w.style.getPropertyValue('--widget-w') || '320px', 
+                h: w.style.getPropertyValue('--widget-h') || '280px',
+                left: w.style.left || '50px',
+                top: w.style.top || '50px'
+            }));
+            localStorage.setItem('standby_dashboard_state', JSON.stringify(state));
+        }
+
+        function confirmAddWidget() {
+            const type = document.getElementById('new-widget-type').value;
+            const id = type + '-' + Date.now();
+            widgetConfigs[id] = (type === 'analog') ? baseAnalogConfig() : baseConfig();
+            if(['weather', 'hourly', 'daily'].includes(type)) widgetConfigs[id].city = 'München';
+            else if (type === 'world') widgetConfigs[id].tz = 'Europe/Berlin';
+            else if (type === 'photo') { widgetConfigs[id].photos = []; widgetConfigs[id].interval = 8; widgetConfigs[id].fit = 'cover'; }
+
+            grid.insertAdjacentHTML('beforeend', getWidgetHTML(id, type));
+            const newWidget = grid.lastElementChild;
+            newWidget.style.setProperty('--widget-w', '320px'); newWidget.style.setProperty('--widget-h', '280px');
+            newWidget.style.left = '50px'; 
+            newWidget.style.top = '50px';
             
-            ctx.beginPath(); ctx.arc(0, 0, radius, 0, 2 * Math.PI);
-            if(conf.analogBgType === 'mesh' && conf.analogMeshPoints?.length > 0) {
-                ctx.save(); ctx.clip();
-                let tempCanvas = document.createElement('canvas'); tempCanvas.width = displaySize; tempCanvas.height = displaySize;
-                let tCtx = tempCanvas.getContext('2d'); tCtx.fillStyle = conf.analogMeshBase || '#1c1c1e'; tCtx.fillRect(0,0,displaySize,displaySize);
-                conf.analogMeshPoints.forEach(p => {
-                    let cx = (p.x / 100) * displaySize; let cy = (p.y / 100) * displaySize;
-                    let grad = tCtx.createRadialGradient(cx, cy, 0, cx, cy, displaySize * 0.75); grad.addColorStop(0, p.color); grad.addColorStop(1, 'transparent');
-                    tCtx.fillStyle = grad; tCtx.fillRect(0,0,displaySize,displaySize);
-                });
-                ctx.drawImage(tempCanvas, -displaySize/2, -displaySize/2); ctx.restore();
-            } else if (conf.analogBgType === 'radial1d' && conf.analogRadialPoints?.length > 0) {
-                ctx.save(); let radialGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-                let sortedPoints = [...conf.analogRadialPoints].sort((a, b) => a.pos - b.pos);
-                sortedPoints.forEach(pt => { let stopValue = Math.max(0, Math.min(1, pt.pos / 100)); radialGrad.addColorStop(stopValue, pt.color); });
-                ctx.fillStyle = radialGrad; ctx.fill(); ctx.restore();
-            } else if(conf.analogBgType === 'image' && conf.analogImgData) {
-                ctx.save(); ctx.clip();
-                if(!conf.analogImgElement) { conf.analogImgElement = new Image(); conf.analogImgElement.src = conf.analogImgData; }
-                if(conf.analogImgElement.complete && conf.analogImgElement.naturalWidth !== 0) ctx.drawImage(conf.analogImgElement, -displaySize/2, -displaySize/2, displaySize, displaySize);
-                else { ctx.fillStyle = conf.analogSolidColor || '#1c1c1e'; ctx.fill(); }
-                ctx.restore();
-            } else {
-                ctx.fillStyle = conf.analogSolidColor || '#1c1c1e'; ctx.fill();
-            }
+            saveDashboardState();
+            localStorage.setItem('standby_widgets_v8', JSON.stringify(widgetConfigs));
+            applyAllWidgetStyles();
+            
+            if(['weather', 'hourly', 'daily'].includes(type)) fetchWeatherMasterData(id);
+            if(type === 'photo') setupDiashowInstance(id);
+            if(type === 'calendar') buildCalendar(id);
+            if(type === 'hourly' || type === 'daily') enableDragScrollLocal(newWidget);
+            
+            document.getElementById('addWidgetModal').style.display = 'none';
+        }
 
-            for (let num = 0; num < 12; num++) {
-                let angle = num * Math.PI / 6; ctx.rotate(angle); ctx.beginPath(); ctx.moveTo(0, -radius); ctx.lineTo(0, -radius + 10);
-                ctx.strokeStyle = conf.text || '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.rotate(-angle);
+        function deleteWidget(btn) {
+            const dictionary = uiTranslations[globalConfig.lang] || uiTranslations['de-DE'];
+            if(confirm(dictionary.confirm_delete)) {
+                const widget = btn.closest('.widget');
+                const id = widget.getAttribute('data-id');
+                if(diashowTimers[id]) clearInterval(diashowTimers[id]);
+                widget.remove();
+                saveDashboardState();
+                delete widgetConfigs[id];
+                localStorage.setItem('standby_widgets_v8', JSON.stringify(widgetConfigs));
             }
+        }
 
-            const faceType = conf.analogFaceType || 'none';
-            if (faceType !== 'none') {
-                ctx.save(); ctx.fillStyle = conf.text || '#ffffff'; ctx.font = conf.isBold ? "bold 15px 'SF Pro Display'" : "14px 'SF Pro Display'";
-                ctx.textBaseline = "middle"; ctx.textAlign = "center";
-                for (let num = 1; num <= 12; num++) {
-                    if (faceType === 'main' && num !== 12 && num !== 3 && num !== 6 && num !== 9) continue;
-                    let angle = num * Math.PI / 6; let x = Math.sin(angle) * (radius - 22); let y = -Math.cos(angle) * (radius - 22);
-                    ctx.fillText(num.toString(), x, y);
+        // --- STUFENLOSES BEWEGEN (DRAG & DROP) ---
+        let activeDragWidget = null;
+        let dragOffsetX = 0, dragOffsetY = 0;
+
+        function initDragDelegation() {
+            grid.addEventListener('pointerdown', (e) => {
+                // Ignoriere Klicks auf Resize-Griff, Buttons, Inputs und scrollbare Wetter-Elemente
+                if (e.target.closest('.resize-handle') || e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.classList.contains('drag-scroll') || e.target.classList.contains('drag-scroll-y')) {
+                    return;
                 }
-                ctx.restore();
-            }
+                const widget = e.target.closest('.widget');
+                if (!widget) return;
 
-            let hour = now.getHours() % 12, minute = now.getMinutes(), second = now.getSeconds(), ms = now.getMilliseconds();
-            hour = (hour * Math.PI / 6) + (minute * Math.PI / (6 * 60)); minute = (minute * Math.PI / 30);
-            let smoothSecond = (second * Math.PI / 30) + (ms * Math.PI / 30000);
-            
-            ctx.save(); ctx.rotate(hour); ctx.beginPath(); ctx.lineWidth = 5.5; ctx.lineCap = "round"; ctx.strokeStyle = conf.text || '#fff'; ctx.moveTo(0,0); ctx.lineTo(0, -radius * 0.5); ctx.stroke(); ctx.restore();
-            ctx.save(); ctx.rotate(minute); ctx.beginPath(); ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.strokeStyle = conf.text || '#fff'; ctx.moveTo(0,0); ctx.lineTo(0, -radius * 0.72); ctx.stroke(); ctx.restore();
-            ctx.save(); ctx.rotate(smoothSecond); ctx.beginPath(); ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = conf.accent || '#ff9f0a'; ctx.moveTo(0, 15); ctx.lineTo(0, -radius * 0.82); ctx.stroke(); ctx.restore();
-            ctx.beginPath(); ctx.arc(0, 0, 4, 0, 2 * Math.PI); ctx.fillStyle = conf.accent || '#ff9f0a'; ctx.fill(); ctx.restore();
-        }
-
-        function toggleBgPicker(target) {
-            let type, solidCont, meshCont, radialCont, imgCont;
-            if(target === 'global') {
-                type = document.getElementById('cfg-global-bg-type').value;
-                solidCont = document.getElementById('global-solid-container'); meshCont = document.getElementById('global-mesh-container');
-            } else if(target === 'widget') {
-                type = document.getElementById('widget-bg-type').value;
-                solidCont = document.getElementById('widget-solid-container'); meshCont = document.getElementById('widget-mesh-container');
-            } else if(target === 'analog') {
-                type = document.getElementById('widget-analog-bg-type').value;
-                solidCont = document.getElementById('analog-solid-container'); meshCont = document.getElementById('analog-mesh-container');
-                radialCont = document.getElementById('analog-radial1d-container'); imgCont = document.getElementById('analog-image-container');
-            }
-            if(solidCont) solidCont.style.display = (type === 'solid') ? 'flex' : 'none';
-            if(meshCont) meshCont.style.display = (type === 'mesh') ? 'flex' : 'none';
-            if(radialCont) radialCont.style.display = (type === 'radial1d') ? 'flex' : 'none';
-            if(imgCont) imgCont.style.display = (type === 'image') ? 'flex' : 'none';
-            
-            if(type === 'mesh' && target !== 'analog') renderMeshEditor(target);
-            if(type === 'radial1d' && target === 'analog') renderRadialLineEditor();
-        }
-
-        function renderMeshEditor(key) {
-            const ed = meshEditors[key]; const pad = document.getElementById(ed.padId); if(!pad) return;
-            pad.style.background = compileMeshGradientCSS(ed.points, document.getElementById(ed.baseInpId).value);
-            pad.querySelectorAll('.gradient-point').forEach(p => p.remove());
-            ed.points.forEach((pt, idx) => {
-                const div = document.createElement('div'); div.className = 'gradient-point' + (idx === ed.activeIndex ? ' active' : '');
-                div.style.left = `${pt.x}%`; div.style.top = `${pt.y}%`; div.style.backgroundColor = pt.color;
-                const startDrag = (e) => {
-                    e.stopPropagation(); e.preventDefault(); ed.activeIndex = idx;
-                    document.getElementById(ed.colorInpId).value = pt.color; renderMeshEditor(key);
-                    const rect = pad.getBoundingClientRect(); const isTouch = e.type.startsWith('touch');
-                    const moveHandler = (mEvt) => {
-                        const clX = isTouch ? mEvt.touches[0].clientX : mEvt.clientX;
-                        const clY = isTouch ? mEvt.touches[0].clientY : mEvt.clientY;
-                        pt.x = Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100)));
-                        pt.y = Math.max(0, Math.min(100, Math.round(((clY - rect.top) / rect.height) * 100)));
-                        renderMeshEditor(key);
-                    };
-                    const upHandler = () => { window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler); window.removeEventListener(isTouch ? 'touchend' : 'mouseup', upHandler); };
-                    window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, {passive: false}); window.addEventListener(isTouch ? 'touchend' : 'mouseup', upHandler);
-                };
-                div.addEventListener('mousedown', startDrag); div.addEventListener('touchstart', startDrag, {passive: false});
-                pad.appendChild(div);
+                activeDragWidget = widget;
+                widget.setPointerCapture(e.pointerId);
+                
+                const rect = widget.getBoundingClientRect();
+                const scale = globalConfig.scale || 1.0;
+                
+                // Berechne den Klick-Offset im Widget unter Berücksichtigung des System-Zooms
+                dragOffsetX = (e.clientX - rect.left) / scale;
+                dragOffsetY = (e.clientY - rect.top) / scale;
+                
+                widget.style.zIndex = 1000;
             });
-        }
 
-        function setupMeshPadListeners(key) {
-            const ed = meshEditors[key]; const pad = document.getElementById(ed.padId); if (!pad) return;
-            const addNewPoint = (e) => {
-                if(e.target !== pad) return; const rect = pad.getBoundingClientRect();
-                const clX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-                const clY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-                ed.points.push({ x: Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100))), y: Math.max(0, Math.min(100, Math.round(((clY - rect.top) / rect.height) * 100))), color: document.getElementById(ed.colorInpId).value });
-                ed.activeIndex = ed.points.length - 1; renderMeshEditor(key);
-            };
-            pad.addEventListener('mousedown', addNewPoint); pad.addEventListener('touchstart', addNewPoint, {passive: true});
-            document.getElementById(ed.colorInpId).addEventListener('input', (e) => { if(ed.activeIndex >= 0 && ed.points[ed.activeIndex]) { ed.points[ed.activeIndex].color = e.target.value; renderMeshEditor(key); } });
-            document.getElementById(ed.baseInpId).addEventListener('input', () => renderMeshEditor(key));
-            document.getElementById(ed.delBtnId).addEventListener('click', () => { if(ed.activeIndex >= 0) { ed.points.splice(ed.activeIndex, 1); ed.activeIndex = -1; renderMeshEditor(key); } });
-        }
-
-        function renderRadialLineEditor() {
-            const pad = document.getElementById('analog-radial-pad'); if(!pad) return;
-            pad.querySelectorAll('.radial-point').forEach(p => p.remove());
-            let sorted = [...radialLineEditor.points].sort((a,b) => a.pos - b.pos);
-            let cssGrad = sorted.map(p => `${p.color} ${p.pos}%`).join(', ');
-            const track = pad.querySelector('.radial-line-track');
-            if(track) track.style.background = sorted.length > 1 ? `linear-gradient(to right, ${cssGrad})` : (sorted[0]?.color || 'rgba(255,255,255,0.2)');
-            radialLineEditor.points.forEach((pt, idx) => {
-                const div = document.createElement('div'); div.className = 'radial-point' + (idx === radialLineEditor.activeIndex ? ' active' : '');
-                div.style.left = `${pt.pos}%`; div.style.backgroundColor = pt.color;
-                const startDrag = (e) => {
-                    e.stopPropagation(); e.preventDefault(); radialLineEditor.activeIndex = idx;
-                    document.getElementById('analog-radial-point-color').value = pt.color; renderRadialLineEditor();
-                    const rect = pad.getBoundingClientRect(); const isTouch = e.type.startsWith('touch');
-                    const moveHandler = (mEvt) => {
-                        const clX = isTouch ? mEvt.touches[0].clientX : mEvt.clientX;
-                        pt.pos = Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100)));
-                        renderRadialLineEditor();
-                    };
-                    const upHandler = () => { window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler); window.removeEventListener(isTouch ? 'touchend' : 'mouseup', upHandler); };
-                    window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, {passive: false}); window.addEventListener(isTouch ? 'touchend' : 'mouseup', upHandler);
-                };
-                div.addEventListener('mousedown', startDrag); div.addEventListener('touchstart', startDrag, {passive: false}); pad.appendChild(div);
+            grid.addEventListener('pointermove', (e) => {
+                if (!activeDragWidget) return;
+                
+                const gridRect = grid.getBoundingClientRect();
+                const scale = globalConfig.scale || 1.0;
+                
+                // Neue stufenlose Position relativ zum Grid berechnen
+                let newLeft = (e.clientX - gridRect.left) / scale - dragOffsetX;
+                let newTop = (e.clientY - gridRect.top) / scale - dragOffsetY;
+                
+                activeDragWidget.style.left = newLeft + 'px';
+                activeDragWidget.style.top = newTop + 'px';
             });
-        }
 
-        function setupRadialLineListeners() {
-            const pad = document.getElementById('analog-radial-pad'); if(!pad) return;
-            const addPoint = (e) => {
-                if(e.target !== pad && !e.target.classList.contains('radial-line-track')) return; const rect = pad.getBoundingClientRect();
-                const clX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
-                let newPos = Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100)));
-                radialLineEditor.points.push({ pos: newPos, color: document.getElementById('analog-radial-point-color').value });
-                radialLineEditor.activeIndex = radialLineEditor.points.length - 1; renderRadialLineEditor();
+            const stopDrag = (e) => {
+                if (!activeDragWidget) return;
+                activeDragWidget.style.zIndex = 1;
+                activeDragWidget.releasePointerCapture(e.pointerId);
+                activeDragWidget = null;
+                saveDashboardState(); // Position speichern beim Loslassen
             };
-            pad.addEventListener('mousedown', addPoint); pad.addEventListener('touchstart', addPoint, {passive: true});
-            document.getElementById('analog-radial-point-color').addEventListener('input', (e) => { if(radialLineEditor.activeIndex >= 0 && radialLineEditor.points[radialLineEditor.activeIndex]) { radialLineEditor.points[radialLineEditor.activeIndex].color = e.target.value; renderRadialLineEditor(); } });
-            document.getElementById('analog-btn-del-radial-point').addEventListener('click', () => { if(radialLineEditor.activeIndex >= 0) { radialLineEditor.points.splice(radialLineEditor.activeIndex, 1); radialLineEditor.activeIndex = -1; renderRadialLineEditor(); } });
+
+            grid.addEventListener('pointerup', stopDrag);
+            grid.addEventListener('pointercancel', stopDrag);
         }
 
-        function inlineTimerAction(sfx, action) {
-            let t = inlineTimers[sfx]; let setupUI = document.getElementById(`t-setup-${sfx}`), runUI = document.getElementById(`t-run-${sfx}`), pauseBtn = document.getElementById(`t-btn-pause-${sfx}`);
-            if(action === 'start') {
-                t.remainingMs = (parseInt(document.getElementById(`t-input-${sfx}`).value) || 5) * 60 * 1000;
-                t.endTimestamp = Date.now() + t.remainingMs; t.state = 'running'; setupUI.style.display = 'none'; runUI.style.display = 'block'; pauseBtn.innerText = "⏸";
-            } else if(action === 'toggle') {
-                if(t.state === 'running') { t.state = 'paused'; t.remainingMs = t.endTimestamp - Date.now(); pauseBtn.innerText = "▶"; }
-                else if(t.state === 'paused') { t.state = 'running'; t.endTimestamp = Date.now() + t.remainingMs; pauseBtn.innerText = "⏸"; }
-            } else if(action === 'reset') { t.state = 'setup'; setupUI.style.display = 'flex'; runUI.style.display = 'none'; }
+        // --- STUFENLOSES SKALIEREN (RESIZE) ---
+        function initResizeDelegation() {
+            grid.addEventListener('mousedown', startResizeProcess);
+            grid.addEventListener('touchstart', startResizeProcess, {passive: false});
         }
 
-        function inlineStopwatchAction(sfx, action) {
-            let sw = inlineStopwatches[sfx]; let btn = document.getElementById(`sw-btn-toggle-${sfx}`);
-            if(action === 'toggle') {
-                if(!sw.running) { sw.running = true; sw.startTimestamp = Date.now(); btn.innerText = "⏸ Pause"; }
-                else { sw.running = false; sw.elapsedMs += (Date.now() - sw.startTimestamp); btn.innerText = "▶ Start"; }
-            } else if(action === 'reset') { sw.running = false; sw.elapsedMs = 0; btn.innerText = "▶ Start"; }
+        function startResizeProcess(e) {
+            if(!e.target.classList.contains('resize-handle')) return;
+            e.preventDefault(); e.stopPropagation();
+            const widget = e.target.closest('.widget');
+            const startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            const startW = widget.offsetWidth; const startH = widget.offsetHeight;
+
+            const onMove = (mEvt) => {
+                const scale = globalConfig.scale || 1.0;
+                const curX = mEvt.type.includes('mouse') ? mEvt.clientX : mEvt.touches[0].clientX;
+                const curY = mEvt.type.includes('mouse') ? mEvt.clientY : mEvt.touches[0].clientY;
+                
+                // Stufenlose und maßstabsgetreue Vergrößerung
+                const newW = Math.max(160, startW + (curX - startX) / scale); 
+                const newH = Math.max(160, startH + (curY - startY) / scale);
+                
+                widget.style.setProperty('--widget-w', `${newW}px`);
+                widget.style.setProperty('--widget-h', `${newH}px`);
+                
+                if(widget.querySelector('.analog-canvas')) {
+                    const id = widget.querySelector('.analog-canvas').id;
+                    drawAnalogClock(id, new Date(), widgetConfigs[widget.getAttribute('data-id')]);
+                }
+            };
+            const onEnd = () => {
+                window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd);
+                saveDashboardState();
+            };
+            window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onEnd);
+            window.addEventListener('touchmove', onMove, {passive: false}); window.addEventListener('touchend', onEnd);
         }
 
-        function formatMsToMinSec(ms) { let ts = Math.ceil(Math.max(0, ms) / 1000); return `${String(Math.floor(ts / 60)).padStart(2, '0')}:${String(ts % 60).padStart(2, '0')}`; }
-        function formatMsToStopwatch(ms) { return `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')},${String(Math.floor((ms % 1000) / 10)).padStart(2, '0')}`; }
-
+        // --- ENGINE-TICKER ---
         let lastSec = -1;
         function updateWidgetsEngine() {
             const now = new Date();
             if(now.getSeconds() !== lastSec) {
                 const timeHTML = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}<span class="seconds">${String(now.getSeconds()).padStart(2, '0')}</span>`;
-                document.getElementById('digi-time-l').innerHTML = timeHTML; document.getElementById('digi-time-r').innerHTML = timeHTML;
                 const dateText = now.toLocaleDateString(globalConfig.lang, { weekday: 'long', day: 'numeric', month: 'long' });
-                document.getElementById('digi-date-l').innerText = dateText; document.getElementById('digi-date-r').innerText = dateText;
-                ['l', 'r'].forEach(sfx => {
+                
+                document.querySelectorAll('.digital-clock').forEach(el => el.innerHTML = timeHTML);
+                document.querySelectorAll('.date-sub').forEach(el => el.innerText = dateText);
+                
+                document.querySelectorAll('.widget[data-type="world"]').forEach(w => {
                     try {
-                        const tz = widgetConfigs[`world-${sfx}`].tz || 'Europe/Berlin';
-                        document.getElementById(`world-name-${sfx}`).innerText = tz.includes('/') ? tz.split('/')[1].replace('_', ' ') : tz;
-                        document.getElementById(`world-time-${sfx}`).innerText = now.toLocaleTimeString(globalConfig.lang, { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+                        const id = w.getAttribute('data-id'); const tz = widgetConfigs[id]?.tz || 'Europe/Berlin';
+                        document.getElementById(`world-name-${id}`).innerText = tz.includes('/') ? tz.split('/')[1].replace('_', ' ') : tz;
+                        document.getElementById(`world-time-${id}`).innerText = now.toLocaleTimeString(globalConfig.lang, { timeZone: tz, hour: '2-digit', minute: '2-digit' });
                     } catch(e) {}
-                }); lastSec = now.getSeconds();
+                });
+                lastSec = now.getSeconds();
             }
-            ['l', 'r'].forEach(sfx => {
-                let t = inlineTimers[sfx];
-                if(t.state === 'running') {
-                    let rem = t.endTimestamp - Date.now();
-                    if(rem <= 0) inlineTimerAction(sfx, 'reset'); else document.getElementById(`count-display-${sfx}`).innerText = formatMsToMinSec(rem);
-                } else if(t.state === 'paused') document.getElementById(`count-display-${sfx}`).innerText = formatMsToMinSec(t.remainingMs);
-                document.getElementById(`stopwatch-display-${sfx}`).innerText = formatMsToStopwatch(inlineStopwatches[sfx].running ? inlineStopwatches[sfx].elapsedMs + (Date.now() - inlineStopwatches[sfx].startTimestamp) : inlineStopwatches[sfx].elapsedMs);
+
+            document.querySelectorAll('.widget[data-type="countdown"]').forEach(w => {
+                const id = w.getAttribute('data-id'); if(!inlineTimers[id]) return; let t = inlineTimers[id];
+                if(t.state === 'running') { let rem = t.endTimestamp - Date.now(); if(rem <= 0) inlineTimerAction(id, 'reset'); else document.getElementById(`count-display-${id}`).innerText = formatMsToMinSec(rem); } else if(t.state === 'paused') document.getElementById(`count-display-${id}`).innerText = formatMsToMinSec(t.remainingMs);
             });
-            drawAnalogClock('analogCanvas-l', now, widgetConfigs['analog-l']); drawAnalogClock('analogCanvas-r', now, widgetConfigs['analog-r']);
+            document.querySelectorAll('.widget[data-type="stopwatch"]').forEach(w => {
+                const id = w.getAttribute('data-id'); if(!inlineStopwatches[id]) return; let sw = inlineStopwatches[id];
+                document.getElementById(`stopwatch-display-${id}`).innerText = formatMsToStopwatch(sw.running ? sw.elapsedMs + (Date.now() - sw.startTimestamp) : sw.elapsedMs);
+            });
+            document.querySelectorAll('.analog-canvas').forEach(canvas => { drawAnalogClock(canvas.id, now, widgetConfigs[canvas.closest('.widget').getAttribute('data-id')]); });
         }
 
-        function weatherFetchCycle() { ['l', 'r'].forEach(sfx => fetchWeatherMasterData(sfx)); }
-
-        async function fetchWeatherMasterData(sfx) {
-            const city = widgetConfigs[`weather-${sfx}`].city || 'München'; const shortLang = globalConfig.lang.split('-')[0];
+        function weatherFetchCycle() { document.querySelectorAll('.widget[data-type="weather"], .widget[data-type="hourly"], .widget[data-type="daily"]').forEach(w => fetchWeatherMasterData(w.getAttribute('data-id'))); }
+        
+        async function fetchWeatherMasterData(id) {
+            if(!widgetConfigs[id]) return; const city = widgetConfigs[id].city || 'München'; const shortLang = globalConfig.lang.split('-')[0];
             try {
-                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=${shortLang}&format=json`);
-                const geoData = await geoRes.json(); if(!geoData.results?.length) return; const loc = geoData.results[0];
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=${shortLang}&format=json`); const geoData = await geoRes.json(); if(!geoData.results?.length) return; const loc = geoData.results[0];
                 const weRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,apparent_temperature,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=10&timezone=auto`);
-                const data = await weRes.json();
-                if(data.current_weather) { sharedWeatherMap[sfx] = { locName: loc.name, raw: data }; buildWeatherUIComponents(sfx); }
-            } catch(e) { console.error("Weather Engine Error:", e); }
+                const data = await weRes.json(); if(data.current_weather) { sharedWeatherMap[id] = { locName: loc.name, raw: data }; buildWeatherUIComponents(id); }
+            } catch(e) {}
         }
 
-        function getWeatherEmoji(code) {
-            if(code === 0) return "☀️"; if(code >= 1 && code <= 3) return "⛅"; if(code >= 45 && code <= 48) return "🌫️";
-            if((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "🌧️"; if((code >= 71 && code <= 77) || code === 85 || code === 86) return "❄️";
-            return "🌩️";
-        }
-
-        function buildWeatherUIComponents(sfx) {
-            const mData = sharedWeatherMap[sfx]; if(!mData) return; const raw = mData.raw; const current = raw.current_weather;
-            const detailContainer = document.getElementById(`we-detail-${sfx}`);
-            if(detailContainer) {
-                let currHourIdx = new Date().getHours();
-                let humidity = raw.hourly?.relativehumidity_2m ? raw.hourly.relativehumidity_2m[currHourIdx] + "%" : "k.A.";
-                let feels = raw.hourly?.apparent_temperature ? Math.round(raw.hourly.apparent_temperature[currHourIdx]) + "°C" : "--";
-                detailContainer.innerHTML = `
-                    <div class="weather-detail-layout">
-                        <div class="weather-main-row">
-                            <div><span style="font-size:1.2rem; font-weight:700;">${mData.locName}</span><br><span style="opacity:0.6; font-size:0.85rem;">Heute</span></div>
-                            <span style="font-size:2.8rem;">${getWeatherEmoji(current.weathercode)}</span>
-                        </div>
-                        <div class="weather-temp-big" style="color:${widgetConfigs['weather-'+sfx].accent}">${Math.round(current.temperature)}°C</div>
-                        <div class="weather-grid-details">
-                            <div class="weather-detail-item"><span class="weather-detail-label">Gefühlt</span><span style="font-weight:bold;">${feels}</span></div>
-                            <div class="weather-detail-item"><span class="weather-detail-label">Feuchte</span><span style="font-weight:bold;">${humidity}</span></div>
-                            <div class="weather-detail-item"><span class="weather-detail-label">Wind</span><span style="font-weight:bold;">${Math.round(current.windspeed)} km/h</span></div>
-                            <div class="weather-detail-item"><span class="weather-detail-label">Max/Min</span><span style="font-weight:bold; font-size:0.75rem;">${Math.round(raw.daily.temperature_2m_max[0])}° / ${Math.round(raw.daily.temperature_2m_min[0])}°</span></div>
-                        </div>
-                    </div>
-                `;
+        function getWeatherEmoji(code) { if(code === 0) return "☀️"; if(code >= 1 && code <= 3) return "⛅"; if(code >= 45 && code <= 48) return "🌫️"; if((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "🌧️"; if((code >= 71 && code <= 77) || code === 85 || code === 86) return "❄️"; return "🌩️"; }
+        
+        function buildWeatherUIComponents(id) {
+            const isEn = globalConfig.lang.startsWith('en');
+            const mData = sharedWeatherMap[id]; if(!mData) return; const raw = mData.raw; const current = raw.current_weather;
+            const det = document.getElementById(`we-detail-${id}`);
+            
+            if(det) { 
+                let currHourIdx = new Date().getHours(); 
+                let humidity = raw.hourly?.relativehumidity_2m ? raw.hourly.relativehumidity_2m[currHourIdx] + "%" : (isEn ? "n/a" : "k.A."); 
+                let feels = raw.hourly?.apparent_temperature ? Math.round(raw.hourly.apparent_temperature[currHourIdx]) + "°C" : "--"; 
+                det.innerHTML = `<div class="weather-detail-layout"><div class="weather-main-row"><div><span style="font-size:1.2rem; font-weight:700;">${mData.locName}</span><br><span style="opacity:0.6; font-size:0.85rem;">${isEn ? 'Today' : 'Heute'}</span></div><span style="font-size:2.8rem;">${getWeatherEmoji(current.weathercode)}</span></div><div class="weather-temp-big" style="color:${widgetConfigs[id].accent}">${Math.round(current.temperature)}°C</div><div class="weather-grid-details"><div class="weather-detail-item"><span class="weather-detail-label">${isEn ? 'Feels like' : 'Gefühlt'}</span><span style="font-weight:bold;">${feels}</span></div><div class="weather-detail-item"><span class="weather-detail-label">${isEn ? 'Humidity' : 'Feuchte'}</span><span style="font-weight:bold;">${humidity}</span></div><div class="weather-detail-item"><span class="weather-detail-label">Wind</span><span style="font-weight:bold;">${Math.round(current.windspeed)} km/h</span></div><div class="weather-detail-item"><span class="weather-detail-label">Max/Min</span><span style="font-weight:bold; font-size:0.75rem;">${Math.round(raw.daily.temperature_2m_max[0])}° / ${Math.round(raw.daily.temperature_2m_min[0])}°</span></div></div></div>`; 
             }
-            const hourlyCityLabel = document.getElementById(`hourly-city-${sfx}`); if(hourlyCityLabel) hourlyCityLabel.innerText = mData.locName;
-            const hourlyContainer = document.getElementById(`hourly-container-${sfx}`);
-            if(hourlyContainer && raw.hourly) {
-                let html = ""; let startHour = new Date().getHours();
-                for(let i = 0; i < 12; i++) {
-                    let hIdx = (startHour + i) % 24; let temp = Math.round(raw.hourly.temperature_2m[startHour + i] || current.temperature); let code = raw.hourly.weathercode[startHour + i] || 0;
-                    html += `<div class="hourly-item"><span style="font-size:0.75rem; opacity:0.6;">${String(hIdx).padStart(2, '0')}:00</span><span style="font-size:1.6rem;">${getWeatherEmoji(code)}</span><span style="font-weight:bold; font-size:0.95rem;">${temp}°</span></div>`;
-                } hourlyContainer.innerHTML = html;
+            
+            const hCity = document.getElementById(`hourly-city-${id}`); if(hCity) hCity.innerText = mData.locName;
+            const hCont = document.getElementById(`hourly-container-${id}`); 
+            if(hCont && raw.hourly) { 
+                let html = ""; let startHour = new Date().getHours(); 
+                for(let i = 0; i < 12; i++) { 
+                    let hIdx = (startHour + i) % 24; let temp = Math.round(raw.hourly.temperature_2m[startHour + i] || current.temperature); let code = raw.hourly.weathercode[startHour + i] || 0; 
+                    html += `<div class="hourly-item"><span style="font-size:0.75rem; opacity:0.6;">${String(hIdx).padStart(2, '0')}:00</span><span style="font-size:1.6rem;">${getWeatherEmoji(code)}</span><span style="font-weight:bold; font-size:0.95rem;">${temp}°</span></div>`; 
+                } 
+                hCont.innerHTML = html; 
             }
-            const dailyCityLabel = document.getElementById(`daily-city-${sfx}`); if(dailyCityLabel) dailyCityLabel.innerText = mData.locName;
-            const dailyContainer = document.getElementById(`daily-container-${sfx}`);
-            if(dailyContainer && raw.daily) {
-                let html = "";
-                for(let i = 0; i < 10; i++) {
-                    if(!raw.daily.time[i]) break; let date = new Date(raw.daily.time[i]); let dayLabel = i === 0 ? "Heute" : date.toLocaleDateString(globalConfig.lang, { weekday: 'short' });
-                    html += `<div class="daily-row"><span style="font-weight:600; min-width:55px;">${dayLabel}</span><span style="font-size:1.2rem;">${getWeatherEmoji(raw.daily.weathercode[i])}</span><span style="font-weight:bold; font-variant-numeric: tabular-nums;">${Math.round(raw.daily.temperature_2m_max[i])}° <span style="opacity:0.4; font-weight:normal; font-size:0.75rem;">/ ${Math.round(raw.daily.temperature_2m_min[i])}°</span></span></div>`;
-                } dailyContainer.innerHTML = html;
+            
+            const dCity = document.getElementById(`daily-city-${id}`); if(dCity) dCity.innerText = mData.locName;
+            const dCont = document.getElementById(`daily-container-${id}`); 
+            if(dCont && raw.daily) { 
+                let html = ""; 
+                for(let i = 0; i < 10; i++) { 
+                    if(!raw.daily.time[i]) break; 
+                    let date = new Date(raw.daily.time[i]); 
+                    let dayLabel = i === 0 ? (isEn ? "Today" : "Heute") : date.toLocaleDateString(globalConfig.lang, { weekday: 'short' }); 
+                    html += `<div class="daily-row"><span style="font-weight:600; min-width:55px;">${dayLabel}</span><span style="font-size:1.2rem;">${getWeatherEmoji(raw.daily.weathercode[i])}</span><span style="font-weight:bold; font-variant-numeric: tabular-nums;">${Math.round(raw.daily.temperature_2m_max[i])}° <span style="opacity:0.4; font-weight:normal; font-size:0.75rem;">/ ${Math.round(raw.daily.temperature_2m_min[i])}°</span></span></div>`; 
+                } 
+                dCont.innerHTML = html; 
             }
         }
 
-        function buildCalendar(suffix) {
-            const grid = document.getElementById(`calendar-grid-${suffix}`), title = document.getElementById(`cal-month-title-${suffix}`); if(!grid || !title) return;
-            const now = new Date(), conf = widgetConfigs[`calendar-${suffix}`];
-            title.innerText = now.toLocaleDateString(globalConfig.lang, { month: 'long', year: 'numeric' }); grid.innerHTML = '';
-            let startOfWeek = new Date(2026, 0, 5); 
-            for(let i=0; i<7; i++) {
-                let div = document.createElement('div'); div.className = 'cal-head'; div.innerText = startOfWeek.toLocaleDateString(globalConfig.lang, { weekday: 'short' }).substring(0,2).toUpperCase();
-                grid.appendChild(div); startOfWeek.setDate(startOfWeek.getDate() + 1);
+        // --- HILFSFUNKTIONEN ---
+        function enableDragScrollLocal(widgetEl) {
+            widgetEl.querySelectorAll('.drag-scroll').forEach(el => {
+                let down=false,startX=0,left=0; el.addEventListener('mousedown',e=>{down=true;startX=e.pageX;left=el.scrollLeft;});
+                window.addEventListener('mouseup',()=>down=false); el.addEventListener('mousemove',e=>{ if(!down) return; e.preventDefault(); el.scrollLeft=left-(e.pageX-startX); });
+            });
+            widgetEl.querySelectorAll('.drag-scroll-y').forEach(el => {
+                let down=false,startY=0,top=0; el.addEventListener('mousedown',e=>{down=true;startY=e.pageY;top=el.scrollTop;});
+                window.addEventListener('mouseup',()=>down=false); el.addEventListener('mousemove',e=>{ if(!down) return; e.preventDefault(); el.scrollTop=top-(e.pageY-startY); });
+            });
+        }
+        
+        function inlineTimerAction(id, action) {
+            if(!inlineTimers[id]) inlineTimers[id] = { state: 'setup', endTimestamp: 0, remainingMs: 0 };
+            let t = inlineTimers[id]; let setupUI = document.getElementById(`t-setup-${id}`), runUI = document.getElementById(`t-run-${id}`), pauseBtn = document.getElementById(`t-btn-pause-${id}`);
+            if(action === 'start') { t.remainingMs = (parseInt(document.getElementById(`t-input-${id}`).value) || 5) * 60 * 1000; t.endTimestamp = Date.now() + t.remainingMs; t.state = 'running'; setupUI.style.display = 'none'; runUI.style.display = 'block'; pauseBtn.innerText = "⏸"; } else if(action === 'toggle') { if(t.state === 'running') { t.state = 'paused'; t.remainingMs = t.endTimestamp - Date.now(); pauseBtn.innerText = "▶"; } else if(t.state === 'paused') { t.state = 'running'; t.endTimestamp = Date.now() + t.remainingMs; pauseBtn.innerText = "⏸"; } } else if(action === 'reset') { t.state = 'setup'; setupUI.style.display = 'flex'; runUI.style.display = 'none'; }
+        }
+        function inlineStopwatchAction(id, action) {
+            if(!inlineStopwatches[id]) inlineStopwatches[id] = { running: false, elapsedMs: 0, startTimestamp: 0 };
+            let sw = inlineStopwatches[id]; let btn = document.getElementById(`sw-btn-toggle-${id}`);
+            if(action === 'toggle') { if(!sw.running) { sw.running = true; sw.startTimestamp = Date.now(); btn.innerText = "⏸ Pause"; } else { sw.running = false; sw.elapsedMs += (Date.now() - sw.startTimestamp); btn.innerText = "▶ Start"; } } else if(action === 'reset') { sw.running = false; sw.elapsedMs = 0; btn.innerText = "▶ Start"; }
+        }
+        function formatMsToMinSec(ms) { let ts = Math.ceil(Math.max(0, ms) / 1000); return `${String(Math.floor(ts / 60)).padStart(2, '0')}:${String(ts % 60).padStart(2, '0')}`; }
+        function formatMsToStopwatch(ms) { return `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')},${String(Math.floor((ms % 1000) / 10)).padStart(2, '0')}`; }
+
+        function drawAnalogClock(id, now, conf) {
+            const canvas = document.getElementById(id); if(!canvas) return; const ctx = canvas.getContext('2d'); 
+            const parent = canvas.parentElement.parentElement; const displaySize = Math.min(parent.offsetWidth, parent.offsetHeight) - 40; const dpr = window.devicePixelRatio || 1;
+            if (canvas.width !== displaySize * dpr) { canvas.width = displaySize * dpr; canvas.height = displaySize * dpr; canvas.style.width = `${displaySize}px`; canvas.style.height = `${displaySize}px`; }
+            ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.scale(dpr, dpr);
+            let radius = displaySize / 2; ctx.translate(radius, radius); radius = radius * 0.88;
+            ctx.beginPath(); ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            
+            // RENDERING CLOCKFACE BACKGROUND
+            if(conf.analogBgType === 'linear') {
+                ctx.save();
+                let angleRad = (conf.analogGradientAngle || 135) * Math.PI / 180;
+                let x1 = Math.cos(angleRad) * -radius; let y1 = Math.sin(angleRad) * -radius;
+                let x2 = Math.cos(angleRad) * radius;  let y2 = Math.sin(angleRad) * radius;
+                let linGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+                linGrad.addColorStop(0, conf.analogGradientStart || '#1c1c1e');
+                linGrad.addColorStop(1, conf.analogGradientEnd || '#3a3a3c');
+                ctx.fillStyle = linGrad; ctx.fill(); ctx.restore();
+            } else if(conf.analogBgType === 'mesh' && conf.analogMeshPoints?.length > 0) { 
+                ctx.save(); ctx.clip(); let tempCanvas = document.createElement('canvas'); tempCanvas.width = displaySize; tempCanvas.height = displaySize; let tCtx = tempCanvas.getContext('2d'); tCtx.fillStyle = conf.analogMeshBase || '#1c1c1e'; tCtx.fillRect(0,0,displaySize,displaySize); conf.analogMeshPoints.forEach(p => { let cx = (p.x / 100) * displaySize; let cy = (p.y / 100) * displaySize; let grad = tCtx.createRadialGradient(cx, cy, 0, cx, cy, displaySize * 0.75); grad.addColorStop(0, p.color); grad.addColorStop(1, 'transparent'); tCtx.fillStyle = grad; tCtx.fillRect(0,0,displaySize,displaySize); }); ctx.drawImage(tempCanvas, -displaySize/2, -displaySize/2); ctx.restore(); 
+            } else if (conf.analogBgType === 'radial1d' && conf.analogRadialPoints?.length > 0) { 
+                ctx.save(); let radialGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius); let sortedPoints = [...conf.analogRadialPoints].sort((a, b) => a.pos - b.pos); sortedPoints.forEach(pt => { let stopValue = Math.max(0, Math.min(1, pt.pos / 100)); radialGrad.addColorStop(stopValue, pt.color); }); ctx.fillStyle = radialGrad; ctx.fill(); ctx.restore(); 
+            } else if(conf.analogBgType === 'image' && conf.analogImgData) { 
+                ctx.save(); ctx.clip(); if(!conf.analogImgElement) { conf.analogImgElement = new Image(); conf.analogImgElement.src = conf.analogImgData; } if(conf.analogImgElement.complete && conf.analogImgElement.naturalWidth !== 0) ctx.drawImage(conf.analogImgElement, -displaySize/2, -displaySize/2, displaySize, displaySize); else { ctx.fillStyle = conf.analogSolidColor || '#1c1c1e'; ctx.fill(); } ctx.restore(); 
+            } else { 
+                ctx.fillStyle = conf.analogSolidColor || '#1c1c1e'; ctx.fill(); 
             }
-            let blanks = new Date(now.getFullYear(), now.getMonth(), 1).getDay() === 0 ? 6 : new Date(now.getFullYear(), now.getMonth(), 1).getDay() - 1;
-            for(let i=0; i<blanks; i++) grid.appendChild(document.createElement('div'));
-            for(let day=1; day<=new Date(now.getFullYear(), now.getMonth()+1, 0).getDate(); day++) {
-                let div = document.createElement('div'); div.innerText = day;
-                if(day === now.getDate()) { div.className = 'cal-today'; div.style.backgroundColor = conf.accent || '#ff9f0a'; div.style.color = '#000'; } else div.style.color = conf.text || '#ffffff';
-                grid.appendChild(div);
-            }
+            
+            for (let num = 0; num < 12; num++) { let angle = num * Math.PI / 6; ctx.rotate(angle); ctx.beginPath(); ctx.moveTo(0, -radius); ctx.lineTo(0, -radius + (displaySize * 0.05)); ctx.strokeStyle = conf.text || '#ffffff'; ctx.lineWidth = displaySize * 0.01; ctx.stroke(); ctx.rotate(-angle); }
+            const faceType = conf.analogFaceType || 'none';
+            if (faceType !== 'none') { ctx.save(); ctx.fillStyle = conf.text || '#ffffff'; ctx.font = conf.isBold ? `bold ${displaySize * 0.07}px 'SF Pro Display'` : `${displaySize * 0.07}px 'SF Pro Display'`; ctx.textBaseline = "middle"; ctx.textAlign = "center"; for (let num = 1; num <= 12; num++) { if (faceType === 'main' && num !== 12 && num !== 3 && num !== 6 && num !== 9) continue; let angle = num * Math.PI / 6; let x = Math.sin(angle) * (radius - (displaySize * 0.12)); let y = -Math.cos(angle) * (radius - (displaySize * 0.12)); ctx.fillText(num.toString(), x, y); } ctx.restore(); }
+            let hour = now.getHours() % 12, minute = now.getMinutes(), second = now.getSeconds(), ms = now.getMilliseconds(); hour = (hour * Math.PI / 6) + (minute * Math.PI / (6 * 60)); minute = (minute * Math.PI / 30); let smoothSecond = (second * Math.PI / 30) + (ms * Math.PI / 30000);
+            ctx.save(); ctx.rotate(hour); ctx.beginPath(); ctx.lineWidth = displaySize * 0.025; ctx.lineCap = "round"; ctx.strokeStyle = conf.text || '#fff'; ctx.moveTo(0,0); ctx.lineTo(0, -radius * 0.5); ctx.stroke(); ctx.restore();
+            ctx.save(); ctx.rotate(minute); ctx.beginPath(); ctx.lineWidth = displaySize * 0.015; ctx.lineCap = "round"; ctx.strokeStyle = conf.text || '#fff'; ctx.moveTo(0,0); ctx.lineTo(0, -radius * 0.72); ctx.stroke(); ctx.restore();
+            ctx.save(); ctx.rotate(smoothSecond); ctx.beginPath(); ctx.lineWidth = displaySize * 0.008; ctx.lineCap = "round"; ctx.strokeStyle = conf.accent || '#ff9f0a'; ctx.moveTo(0, displaySize * 0.08); ctx.lineTo(0, -radius * 0.82); ctx.stroke(); ctx.restore();
+            ctx.beginPath(); ctx.arc(0, 0, displaySize * 0.02, 0, 2 * Math.PI); ctx.fillStyle = conf.accent || '#ff9f0a'; ctx.fill(); ctx.restore();
         }
 
+        function buildCalendar(id) {
+            const gridEl = document.getElementById(`calendar-grid-${id}`), title = document.getElementById(`cal-month-title-${id}`); if(!gridEl || !title) return;
+            const now = new Date(), conf = widgetConfigs[id]; title.innerText = now.toLocaleDateString(globalConfig.lang, { month: 'long', year: 'numeric' }); gridEl.innerHTML = '';
+            let startOfWeek = new Date(2026, 0, 5); for(let i=0; i<7; i++) { let div = document.createElement('div'); div.className = 'cal-head'; div.innerText = startOfWeek.toLocaleDateString(globalConfig.lang, { weekday: 'short' }).substring(0,2).toUpperCase(); gridEl.appendChild(div); startOfWeek.setDate(startOfWeek.getDate() + 1); }
+            let blanks = new Date(now.getFullYear(), now.getMonth(), 1).getDay() === 0 ? 6 : new Date(now.getFullYear(), now.getMonth(), 1).getDay() - 1; for(let i=0; i<blanks; i++) gridEl.appendChild(document.createElement('div'));
+            for(let day=1; day<=new Date(now.getFullYear(), now.getMonth()+1, 0).getDate(); day++) { let div = document.createElement('div'); div.innerText = day; if(day === now.getDate()) { div.className = 'cal-today'; div.style.backgroundColor = conf.accent || '#ff9f0a'; div.style.color = '#000'; } else div.style.color = conf.text || '#ffffff'; gridEl.appendChild(div); }
+        }
+
+        function setupDiashowInstance(id) { if(diashowTimers[id]) clearInterval(diashowTimers[id]); const conf = widgetConfigs[id]; const imgEl = document.getElementById(`widget-photo-${id}`); if(!imgEl) return; let index = 0; let step = () => { let list = conf.photos?.length ? conf.photos : defaultPhotos; if(list.length) { imgEl.style.backgroundImage = `url('${list[index % list.length]}')`; index++; } }; step(); diashowTimers[id] = setInterval(step, (conf.interval || 8) * 1000); }
+
+        function applyGlobalScale() { document.documentElement.style.setProperty('--global-scale', globalConfig.scale || 1.0); }
+        function compileMeshGradientCSS(points, baseColor) { if(!points || points.length === 0) return baseColor; const grads = points.map(p => `radial-gradient(circle at ${p.x}% ${p.y}%, ${p.color} 0%, transparent 75%)`); return `${grads.join(', ')}, ${baseColor}`; }
+        function hexToRgb(hex) { let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i; hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b); let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '15,15,15'; }
+
+        function applyAllWidgetStyles() {
+            // APPLY GLOBAL BG
+            let finalGlobalBg = '#000000';
+            if(globalConfig.bgType === 'mesh') finalGlobalBg = compileMeshGradientCSS(globalConfig.bgMeshPoints, globalConfig.bgBase);
+            else if(globalConfig.bgType === 'linear') finalGlobalBg = `linear-gradient(${globalConfig.bgGradAngle || 135}deg, ${globalConfig.bgGradStart || '#ff9f0a'}, ${globalConfig.bgGradEnd || '#0a84ff'})`;
+            else finalGlobalBg = globalConfig.bgSolid || '#000000';
+            document.getElementById('app-body').style.background = finalGlobalBg;
+
+            document.querySelectorAll('.widget').forEach(el => {
+                const id = el.getAttribute('data-id'); const conf = widgetConfigs[id]; if(!conf) return; const op = conf.opacity ?? 0.85;
+                if (op <= 0) el.style.border = "none"; else el.style.border = "1px solid rgba(255, 255, 255, 0.15)";
+                
+                // APPLY WIDGET BG
+                let baseBg = '#111111';
+                if(conf.bgType === 'mesh') baseBg = compileMeshGradientCSS(conf.bgMeshPoints, conf.bgBase);
+                else if(conf.bgType === 'linear') baseBg = `linear-gradient(${conf.bgGradAngle || 135}deg, ${conf.bgGradStart || '#ff9f0a'}, ${conf.bgGradEnd || '#0a84ff'})`;
+                else baseBg = `rgba(${hexToRgb(conf.bgSolid || '#111111')}, ${op})`;
+                
+                el.style.background = baseBg; 
+                el.style.fontWeight = conf.isBold ? '700' : 'normal'; if(conf.text) el.style.color = conf.text;
+                if(el.getAttribute('data-type') === 'photo') { const pic = el.querySelector('.inline-photo-widget'); if(pic) pic.style.backgroundSize = conf.fit || 'cover'; }
+                if(el.getAttribute('data-type') === 'calendar') buildCalendar(id);
+            });
+        }
+
+        function initAutoHideUI() {
+            const showUI = () => { ['btn-settings', 'btn-fullscreen', 'btn-add'].forEach(id => { const b = document.getElementById(id); if(b){b.style.opacity = '1'; b.style.pointerEvents = 'auto';} }); clearTimeout(uiButtonsTimeout); uiButtonsTimeout = setTimeout(() => { ['btn-settings', 'btn-fullscreen', 'btn-add'].forEach(id => { const b = document.getElementById(id); if(b){b.style.opacity = '0'; b.style.pointerEvents = 'none';} }); }, 3000); };
+            ['mousemove', 'touchstart', 'click'].forEach(evt => window.addEventListener(evt, showUI, { passive: true })); showUI();
+        }
+        function initBurnInProtection() { const container = document.getElementById('protection-container'); setInterval(() => { container.style.transform = `translate(${Math.floor(Math.random() * 5) - 2}px, ${Math.floor(Math.random() * 5) - 2}px)`; }, 60000); }
+        document.getElementById('btn-fullscreen').addEventListener('click', () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else document.exitFullscreen(); });
+
+        // --- EDITOREN & TOGGLES ---
+        function toggleBgPicker(target) { 
+            let type, solidCont, meshCont, radialCont, imgCont, linearCont; 
+            if(target === 'global') { 
+                type = document.getElementById('cfg-global-bg-type').value; 
+                solidCont = document.getElementById('global-solid-container'); 
+                meshCont = document.getElementById('global-mesh-container'); 
+                linearCont = document.getElementById('global-linear-container');
+            } else if(target === 'widget') { 
+                type = document.getElementById('widget-bg-type').value; 
+                solidCont = document.getElementById('widget-solid-container'); 
+                meshCont = document.getElementById('widget-mesh-container'); 
+                linearCont = document.getElementById('widget-linear-container');
+            } else if(target === 'analog') { 
+                type = document.getElementById('widget-analog-bg-type').value; 
+                solidCont = document.getElementById('analog-solid-container'); 
+                meshCont = document.getElementById('analog-mesh-container'); 
+                radialCont = document.getElementById('analog-radial1d-container'); 
+                imgCont = document.getElementById('analog-image-container'); 
+                linearCont = document.getElementById('analog-linear-container');
+            } 
+            if(solidCont) solidCont.style.display = (type === 'solid') ? 'flex' : 'none'; 
+            if(meshCont) meshCont.style.display = (type === 'mesh') ? 'flex' : 'none'; 
+            if(linearCont) linearCont.style.display = (type === 'linear') ? 'flex' : 'none';
+            if(radialCont) radialCont.style.display = (type === 'radial1d') ? 'flex' : 'none'; 
+            if(imgCont) imgCont.style.display = (type === 'image') ? 'flex' : 'none'; 
+            if(type === 'mesh' && target !== 'analog') renderMeshEditor(target); 
+            if(type === 'radial1d' && target === 'analog') renderRadialLineEditor(); 
+        }
+
+        function renderMeshEditor(key) { const ed = meshEditors[key]; const pad = document.getElementById(ed.padId); if(!pad) return; pad.style.background = compileMeshGradientCSS(ed.points, document.getElementById(ed.baseInpId).value); pad.querySelectorAll('.gradient-point').forEach(p => p.remove()); ed.points.forEach((pt, idx) => { const div = document.createElement('div'); div.className = 'gradient-point' + (idx === ed.activeIndex ? ' active' : ''); div.style.left = `${pt.x}%`; div.style.top = `${pt.y}%`; div.style.backgroundColor = pt.color; const startDrag = (e) => { e.stopPropagation(); e.preventDefault(); ed.activeIndex = idx; document.getElementById(ed.colorInpId).value = pt.color; renderMeshEditor(key); const rect = pad.getBoundingClientRect(); const isTouch = e.type.startsWith('touch'); const moveHandler = (mEvt) => { const clX = isTouch ? mEvt.touches[0].clientX : mEvt.clientX; const clY = isTouch ? mEvt.touches[0].clientY : mEvt.clientY; pt.x = Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100))); pt.y = Math.max(0, Math.min(100, Math.round(((clY - rect.top) / rect.height) * 100))); renderMeshEditor(key); }; const upHandler = () => { window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler); window.removeEventListener(isTouch ? 'touchend' : 'mouseup', upHandler); }; window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, {passive: false}); window.addEventListener(isTouch ? 'touchend' : 'mouseup', upHandler); }; div.addEventListener('mousedown', startDrag); div.addEventListener('touchstart', startDrag, {passive: false}); pad.appendChild(div); }); }
+        function setupMeshPadListeners(key) { const ed = meshEditors[key]; const pad = document.getElementById(ed.padId); if (!pad) return; const addNewPoint = (e) => { if(e.target !== pad) return; const rect = pad.getBoundingClientRect(); const clX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX; const clY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY; ed.points.push({ x: Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100))), y: Math.max(0, Math.min(100, Math.round(((clY - rect.top) / rect.height) * 100))), color: document.getElementById(ed.colorInpId).value }); ed.activeIndex = ed.points.length - 1; renderMeshEditor(key); }; pad.addEventListener('mousedown', addNewPoint); pad.addEventListener('touchstart', addNewPoint, {passive: true}); document.getElementById(ed.colorInpId).addEventListener('input', (e) => { if(ed.activeIndex >= 0 && ed.points[ed.activeIndex]) { ed.points[ed.activeIndex].color = e.target.value; renderMeshEditor(key); } }); document.getElementById(ed.baseInpId).addEventListener('input', () => renderMeshEditor(key)); document.getElementById(ed.delBtnId).addEventListener('click', () => { if(ed.activeIndex >= 0) { ed.points.splice(ed.activeIndex, 1); ed.activeIndex = -1; renderMeshEditor(key); } }); }
+        function renderRadialLineEditor() { const pad = document.getElementById('analog-radial-pad'); if(!pad) return; pad.querySelectorAll('.radial-point').forEach(p => p.remove()); let sorted = [...radialLineEditor.points].sort((a,b) => a.pos - b.pos); let cssGrad = sorted.map(p => `${p.color} ${p.pos}%`).join(', '); const track = pad.querySelector('.radial-line-track'); if(track) track.style.background = sorted.length > 1 ? `linear-gradient(to right, ${cssGrad})` : (sorted[0]?.color || 'rgba(255,255,255,0.2)'); radialLineEditor.points.forEach((pt, idx) => { const div = document.createElement('div'); div.className = 'radial-point' + (idx === radialLineEditor.activeIndex ? ' active' : ''); div.style.left = `${pt.pos}%`; div.style.backgroundColor = pt.color; const startDrag = (e) => { e.stopPropagation(); e.preventDefault(); radialLineEditor.activeIndex = idx; document.getElementById('analog-radial-point-color').value = pt.color; renderRadialLineEditor(); const rect = pad.getBoundingClientRect(); const isTouch = e.type.startsWith('touch'); const moveHandler = (mEvt) => { const clX = isTouch ? mEvt.touches[0].clientX : mEvt.clientX; pt.pos = Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100))); renderRadialLineEditor(); }; const upHandler = () => { window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler); window.removeEventListener(isTouch ? 'touchend' : 'mouseup', upHandler); }; window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, {passive: false}); window.addEventListener(isTouch ? 'touchend' : 'mouseup', upHandler); }; div.addEventListener('mousedown', startDrag); div.addEventListener('touchstart', startDrag, {passive: false}); pad.appendChild(div); }); }
+        function setupRadialLineListeners() { const pad = document.getElementById('analog-radial-pad'); if(!pad) return; const addPoint = (e) => { if(e.target !== pad && !e.target.classList.contains('radial-line-track')) return; const rect = pad.getBoundingClientRect(); const clX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX; let newPos = Math.max(0, Math.min(100, Math.round(((clX - rect.left) / rect.width) * 100))); radialLineEditor.points.push({ pos: newPos, color: document.getElementById('analog-radial-point-color').value }); radialLineEditor.activeIndex = radialLineEditor.points.length - 1; renderRadialLineEditor(); }; pad.addEventListener('mousedown', addPoint); pad.addEventListener('touchstart', addPoint, {passive: true}); document.getElementById('analog-radial-point-color').addEventListener('input', (e) => { if(radialLineEditor.activeIndex >= 0 && radialLineEditor.points[radialLineEditor.activeIndex]) { radialLineEditor.points[radialLineEditor.activeIndex].color = e.target.value; renderRadialLineEditor(); } }); document.getElementById('analog-btn-del-radial-point').addEventListener('click', () => { if(radialLineEditor.activeIndex >= 0) { radialLineEditor.points.splice(radialLineEditor.activeIndex, 1); radialLineEditor.activeIndex = -1; renderRadialLineEditor(); } }); }
+
+        // --- GLOBAL MODAL EVENTS ---
         document.getElementById('btn-settings').addEventListener('click', () => { 
-            document.getElementById('cfg-global-scale').value = globalConfig.scale || 1.0; document.getElementById('cfg-global-lang').value = globalConfig.lang;
-            document.getElementById('cfg-global-bg-type').value = globalConfig.bgType; document.getElementById('cfg-global-bg-solid').value = globalConfig.bgSolid || '#000000';
-            document.getElementById('global-mesh-base').value = globalConfig.bgBase || '#000000'; meshEditors.global.points = JSON.parse(JSON.stringify(globalConfig.bgMeshPoints || [])); meshEditors.global.activeIndex = -1;
-            toggleBgPicker('global'); settingsModal.style.display = 'flex'; 
+            document.getElementById('cfg-global-scale').value = globalConfig.scale || 1.0; 
+            document.getElementById('cfg-global-lang').value = globalConfig.lang; 
+            document.getElementById('cfg-global-bg-type').value = globalConfig.bgType || 'solid'; 
+            document.getElementById('cfg-global-bg-solid').value = globalConfig.bgSolid || '#000000'; 
+            document.getElementById('cfg-global-grad-start').value = globalConfig.bgGradStart || '#ff9f0a';
+            document.getElementById('cfg-global-grad-end').value = globalConfig.bgGradEnd || '#0a84ff';
+            document.getElementById('cfg-global-grad-angle').value = globalConfig.bgGradAngle || 135;
+            document.getElementById('global-mesh-base').value = globalConfig.bgBase || '#000000'; 
+            meshEditors.global.points = JSON.parse(JSON.stringify(globalConfig.bgMeshPoints || [])); 
+            meshEditors.global.activeIndex = -1; 
+            toggleBgPicker('global'); 
+            settingsModal.style.display = 'flex'; 
         });
         
-        document.getElementById('btn-close-settings').addEventListener('click', () => {
-            globalConfig.scale = parseFloat(document.getElementById('cfg-global-scale').value); globalConfig.lang = document.getElementById('cfg-global-lang').value; globalConfig.bgType = document.getElementById('cfg-global-bg-type').value;
-            globalConfig.bgSolid = document.getElementById('cfg-global-bg-solid').value; globalConfig.bgBase = document.getElementById('global-mesh-base').value; globalConfig.bgMeshPoints = meshEditors.global.points;
-            localStorage.setItem('standby_global_v8', JSON.stringify(globalConfig)); applyGlobalScale(); lastSec = -1; applyAllWidgetStyles(); settingsModal.style.display = 'none';
+        document.getElementById('btn-close-settings').addEventListener('click', () => { 
+            globalConfig.scale = parseFloat(document.getElementById('cfg-global-scale').value); 
+            globalConfig.lang = document.getElementById('cfg-global-lang').value; 
+            globalConfig.bgType = document.getElementById('cfg-global-bg-type').value; 
+            globalConfig.bgSolid = document.getElementById('cfg-global-bg-solid').value; 
+            globalConfig.bgGradStart = document.getElementById('cfg-global-grad-start').value;
+            globalConfig.bgGradEnd = document.getElementById('cfg-global-grad-end').value;
+            globalConfig.bgGradAngle = parseInt(document.getElementById('cfg-global-grad-angle').value);
+            globalConfig.bgBase = document.getElementById('global-mesh-base').value; 
+            globalConfig.bgMeshPoints = meshEditors.global.points; 
+            localStorage.setItem('standby_global_v8', JSON.stringify(globalConfig)); 
+            
+            translateStaticUI();
+            applyGlobalScale(); 
+            lastSec = -1; 
+            
+            loadDashboardState(); 
+            applyAllWidgetStyles(); 
+            settingsModal.style.display = 'none'; 
         });
 
+        // --- WIDGET MODAL EVENTS ---
         function openWidgetSettings(id) {
-            const conf = widgetConfigs[id]; document.getElementById('current-widget-id').value = id;
-            document.getElementById('widget-settings-title').innerText = `Setup: ${id.split('-')[0].toUpperCase()}`; document.getElementById('widget-is-bold').checked = conf.isBold || false; document.getElementById('widget-opacity').value = conf.opacity ?? 0.85;
-            document.getElementById('widget-bg-type').value = conf.bgType || 'solid'; document.getElementById('widget-color-bg').value = conf.bgSolid || '#111111'; document.getElementById('widget-mesh-base').value = conf.bgBase || '#111111';
-            meshEditors.widget.points = JSON.parse(JSON.stringify(conf.bgMeshPoints || [])); meshEditors.widget.activeIndex = -1;
-            document.getElementById('widget-color-text').value = conf.text || '#ffffff'; document.getElementById('widget-color-accent').value = conf.accent || '#ff9f0a';
-
-            const isWeather = id.startsWith('weather') || id.startsWith('hourly') || id.startsWith('daily');
-            document.getElementById('group-city').style.display = isWeather ? 'flex' : 'none';
-            if(isWeather) document.getElementById('widget-city-input').value = conf.city || 'München';
-
-            const isAnalog = id.startsWith('analog');
-            document.getElementById('group-analog-clockface').style.display = isAnalog ? 'flex' : 'none';
-            if(isAnalog) {
-                document.getElementById('widget-analog-face-type').value = conf.analogFaceType || 'none'; document.getElementById('widget-analog-bg-type').value = conf.analogBgType || 'solid';
-                document.getElementById('widget-analog-solid-color').value = conf.analogSolidColor || '#1c1c1e'; document.getElementById('analog-mesh-base').value = conf.analogMeshBase || '#1c1c1e';
-                meshEditors.analog.points = JSON.parse(JSON.stringify(conf.analogMeshPoints || [])); meshEditors.analog.activeIndex = -1; radialLineEditor.points = JSON.parse(JSON.stringify(conf.analogRadialPoints || [])); radialLineEditor.activeIndex = -1;
-                document.getElementById('widget-analog-image-file').value = ""; toggleBgPicker('analog');
+            const conf = widgetConfigs[id]; const type = document.querySelector(`.widget[data-id="${id}"]`).getAttribute('data-type'); document.getElementById('current-widget-id').value = id; 
+            const lang = globalConfig.lang || 'de-DE';
+            const dictionary = uiTranslations[lang] || uiTranslations['de-DE'];
+            document.getElementById('widget-settings-title').innerText = `${dictionary.widget_custom_title}: ${type.toUpperCase()}`; 
+            document.getElementById('widget-is-bold').checked = conf.isBold || false; document.getElementById('widget-opacity').value = conf.opacity ?? 0.85; 
+            document.getElementById('widget-bg-type').value = conf.bgType || 'solid'; 
+            document.getElementById('widget-color-bg').value = conf.bgSolid || '#111111'; 
+            document.getElementById('widget-grad-start').value = conf.bgGradStart || '#ff9f0a';
+            document.getElementById('widget-grad-end').value = conf.bgGradEnd || '#0a84ff';
+            document.getElementById('widget-grad-angle').value = conf.bgGradAngle || 135;
+            document.getElementById('widget-mesh-base').value = conf.bgBase || '#111111'; 
+            meshEditors.widget.points = JSON.parse(JSON.stringify(conf.bgMeshPoints || [])); 
+            meshEditors.widget.activeIndex = -1; 
+            document.getElementById('widget-color-text').value = conf.text || '#ffffff'; 
+            document.getElementById('widget-color-accent').value = conf.accent || '#ff9f0a';
+            
+            const isWeather = ['weather', 'hourly', 'daily'].includes(type); document.getElementById('group-city').style.display = isWeather ? 'flex' : 'none'; if(isWeather) document.getElementById('widget-city-input').value = conf.city || 'München';
+            const isAnalog = type === 'analog'; document.getElementById('group-analog-clockface').style.display = isAnalog ? 'flex' : 'none'; 
+            if(isAnalog) { 
+                document.getElementById('widget-analog-face-type').value = conf.analogFaceType || 'none'; 
+                document.getElementById('widget-analog-bg-type').value = conf.analogBgType || 'solid'; 
+                document.getElementById('widget-analog-solid-color').value = conf.analogSolidColor || '#1c1c1e'; 
+                document.getElementById('widget-analog-grad-start').value = conf.analogGradientStart || '#1c1c1e';
+                document.getElementById('widget-analog-grad-end').value = conf.analogGradientEnd || '#3a3a3c';
+                document.getElementById('widget-analog-grad-angle').value = conf.analogGradientAngle || 135;
+                document.getElementById('analog-mesh-base').value = conf.analogMeshBase || '#1c1c1e'; 
+                meshEditors.analog.points = JSON.parse(JSON.stringify(conf.analogMeshPoints || [])); 
+                meshEditors.analog.activeIndex = -1; 
+                radialLineEditor.points = JSON.parse(JSON.stringify(conf.analogRadialPoints || [])); 
+                radialLineEditor.activeIndex = -1; 
+                document.getElementById('widget-analog-image-file').value = ""; 
+                toggleBgPicker('analog'); 
             }
-            const isPhoto = id.startsWith('photo');
-            document.getElementById('group-photo-opts').style.display = isPhoto ? 'flex' : 'none';
-            if(isPhoto) document.getElementById('widget-photo-fit').value = conf.fit || 'cover';
-            document.getElementById('group-timezone').style.display = id.startsWith('world') ? 'flex' : 'none';
-            if(conf.tz) document.getElementById('widget-timezone-input').value = conf.tz;
+            const isPhoto = type === 'photo'; document.getElementById('group-photo-opts').style.display = isPhoto ? 'flex' : 'none'; if(isPhoto) document.getElementById('widget-photo-fit').value = conf.fit || 'cover';
+            document.getElementById('group-timezone').style.display = type === 'world' ? 'flex' : 'none'; if(conf.tz) document.getElementById('widget-timezone-input').value = conf.tz;
             toggleBgPicker('widget'); widgetModal.style.display = 'flex';
         }
 
-        /* NEUER, LEISTUNGSSTARKER DATEI-KOMPRESSOR */
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        
-                        // Maximale Auflösung für Widgets (Völlig ausreichend für scharfe Ansicht)
-                        const MAX_WIDTH = 1024;
-                        const MAX_HEIGHT = 1024;
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        
-                        // Bild auf Canvas zeichnen
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Extrem effiziente Kompression (0.45 Qualität spart massiv Platz im Speicher)
-                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.45);
-                        resolve(compressedDataUrl);
-                    };
-                    img.onerror = () => reject("Bild konnte nicht geladen werden.");
-                    img.src = e.target.result;
-                };
-                reader.onerror = () => reject("Datei konnte nicht gelesen werden.");
-                reader.readAsDataURL(file);
-            });
-        }
+        function compressImage(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const MAX_WIDTH = 1024; const MAX_HEIGHT = 1024; let width = img.width; let height = img.height; if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } } canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height); resolve(canvas.toDataURL('image/jpeg', 0.45)); }; img.onerror = () => reject("Bildfehler"); img.src = e.target.result; }; reader.onerror = () => reject("Dateifehler"); reader.readAsDataURL(file); }); }
 
         document.getElementById('btn-save-widget-settings').addEventListener('click', async () => {
-            const id = document.getElementById('current-widget-id').value; const conf = widgetConfigs[id];
-            conf.isBold = document.getElementById('widget-is-bold').checked; conf.opacity = parseFloat(document.getElementById('widget-opacity').value);
-            conf.bgType = document.getElementById('widget-bg-type').value; conf.bgSolid = document.getElementById('widget-color-bg').value;
-            conf.bgBase = document.getElementById('widget-mesh-base').value; conf.bgMeshPoints = meshEditors.widget.points;
-            conf.text = document.getElementById('widget-color-text').value; conf.accent = document.getElementById('widget-color-accent').value;
-
-            if(id.startsWith('weather') || id.startsWith('hourly') || id.startsWith('daily')) {
-                const targetCity = document.getElementById('widget-city-input').value.trim() || 'München';
-                const sideSuffix = id.endsWith('-l') ? '-l' : '-r';
-                widgetConfigs['weather' + sideSuffix].city = targetCity; widgetConfigs['hourly' + sideSuffix].city = targetCity; widgetConfigs['daily' + sideSuffix].city = targetCity;
-            }
-            if(id.startsWith('analog')) {
-                conf.analogFaceType = document.getElementById('widget-analog-face-type').value; conf.analogBgType = document.getElementById('widget-analog-bg-type').value;
-                conf.analogSolidColor = document.getElementById('widget-analog-solid-color').value; conf.analogMeshBase = document.getElementById('analog-mesh-base').value;
-                conf.analogMeshPoints = meshEditors.analog.points; conf.analogRadialPoints = radialLineEditor.points;
-                const analogFileInp = document.getElementById('widget-analog-image-file');
-                if (analogFileInp && analogFileInp.files.length > 0) {
-                    try { conf.analogImgData = await compressImage(analogFileInp.files[0]); conf.analogImgElement = null; } catch(err) { alert(err); }
-                }
-            }
-            if(id.startsWith('world')) conf.tz = document.getElementById('widget-timezone-input').value.trim() || 'Europe/Berlin';
-            if(id.startsWith('photo')) {
-                conf.fit = document.getElementById('widget-photo-fit').value;
-                const fileInput = document.getElementById('widget-photo-files');
-                if (fileInput.files.length > 0) { 
-                    let tempPhotos = []; 
-                    for(let i=0; i<fileInput.files.length; i++) { 
-                        try { let comp = await compressImage(fileInput.files[i]); tempPhotos.push(comp); } catch(err) { console.error(err); }
-                    }
-                    if(tempPhotos.length > 0) conf.photos = tempPhotos;
-                } setupDiashowInstance(id);
-            }
-
-            try {
-                localStorage.setItem('standby_widgets_v8', JSON.stringify(widgetConfigs));
-            } catch (storageError) {
-                alert("Warnung: Der Browserspeicher ist voll! Bitte lade weniger oder kleinere Bilder hoch.");
-            }
+            const id = document.getElementById('current-widget-id').value; const conf = widgetConfigs[id]; const type = document.querySelector(`.widget[data-id="${id}"]`).getAttribute('data-type');
+            conf.isBold = document.getElementById('widget-is-bold').checked; conf.opacity = parseFloat(document.getElementById('widget-opacity').value); 
+            conf.bgType = document.getElementById('widget-bg-type').value; 
+            conf.bgSolid = document.getElementById('widget-color-bg').value; 
+            conf.bgGradStart = document.getElementById('widget-grad-start').value;
+            conf.bgGradEnd = document.getElementById('widget-grad-end').value;
+            conf.bgGradAngle = parseInt(document.getElementById('widget-grad-angle').value);
+            conf.bgBase = document.getElementById('widget-mesh-base').value; conf.bgMeshPoints = meshEditors.widget.points; conf.text = document.getElementById('widget-color-text').value; conf.accent = document.getElementById('widget-color-accent').value;
             
-            applyAllWidgetStyles();
-            if(id.startsWith('weather') || id.startsWith('hourly') || id.startsWith('daily')) { fetchWeatherMasterData(id.endsWith('-l') ? 'l' : 'r'); }
-            widgetModal.style.display = 'none';
+            if(['weather', 'hourly', 'daily'].includes(type)) conf.city = document.getElementById('widget-city-input').value.trim() || 'München';
+            if(type === 'analog') { 
+                conf.analogFaceType = document.getElementById('widget-analog-face-type').value; 
+                conf.analogBgType = document.getElementById('widget-analog-bg-type').value; 
+                conf.analogSolidColor = document.getElementById('widget-analog-solid-color').value; 
+                conf.analogGradientStart = document.getElementById('widget-analog-grad-start').value;
+                conf.analogGradientEnd = document.getElementById('widget-analog-grad-end').value;
+                conf.analogGradientAngle = parseInt(document.getElementById('widget-analog-grad-angle').value);
+                conf.analogMeshBase = document.getElementById('analog-mesh-base').value; conf.analogMeshPoints = meshEditors.analog.points; conf.analogRadialPoints = radialLineEditor.points; const analogFileInp = document.getElementById('widget-analog-image-file'); if (analogFileInp && analogFileInp.files.length > 0) { try { conf.analogImgData = await compressImage(analogFileInp.files[0]); conf.analogImgElement = null; } catch(err) { alert(err); } } 
+            }
+            if(type === 'world') conf.tz = document.getElementById('widget-timezone-input').value.trim() || 'Europe/Berlin';
+            if(type === 'photo') { conf.fit = document.getElementById('widget-photo-fit').value; const fileInput = document.getElementById('widget-photo-files'); if (fileInput.files.length > 0) { let tempPhotos = []; for(let i=0; i<fileInput.files.length; i++) { try { let comp = await compressImage(fileInput.files[i]); tempPhotos.push(comp); } catch(err) {} } if(tempPhotos.length > 0) conf.photos = tempPhotos; } setupDiashowInstance(id); }
+            try { localStorage.setItem('standby_widgets_v8', JSON.stringify(widgetConfigs)); } catch (err) { alert("Speicher voll! Bitte lade weniger/kleinere Bilder hoch."); }
+            applyAllWidgetStyles(); if(['weather', 'hourly', 'daily'].includes(type)) fetchWeatherMasterData(id); widgetModal.style.display = 'none';
         });
-
-        function initTouchAndScroll() {
-            document.getElementById('col-left').addEventListener('wheel', (e) => { e.preventDefault(); uiState.leftIndex = e.deltaY > 0 ? Math.min(uiState.leftIndex + 1, MAX_WIDGETS) : Math.max(uiState.leftIndex - 1, 0); updateTrackTransforms(); flashGearIcon('left', uiState.leftIndex); }, { passive: false });
-            document.getElementById('col-right').addEventListener('wheel', (e) => { e.preventDefault(); uiState.rightIndex = e.deltaY > 0 ? Math.min(uiState.rightIndex + 1, MAX_WIDGETS) : Math.max(uiState.rightIndex - 1, 0); updateTrackTransforms(); flashGearIcon('right', uiState.rightIndex); }, { passive: false });
-            let touchStartX = 0, touchStartY = 0, targetElement = null;
-            window.addEventListener('touchstart', (e) => { if(e.target.closest('.inline-input, .inline-btn, .widget-config-btn, .ui-btn, .gradient-pad, .radial-line-pad, input, select, .hourly-scroll-container, .daily-list-container')) return; touchStartX = e.changedTouches[0].clientX; touchStartY = e.changedTouches[0].clientY; targetElement = e.target.closest('.widget-column'); }, { passive: true });
-            window.addEventListener('touchend', (e) => {
-                if(e.target.closest('.inline-input, .inline-btn, .widget-config-btn, .ui-btn, .gradient-pad, .radial-line-pad, input, select, .hourly-scroll-container, .daily-list-container')) return;
-                let diffY = e.changedTouches[0].clientY - touchStartY;
-                if (Math.abs(diffY) > 40) {
-                    let isLeft = targetElement ? targetElement.getAttribute('data-side') === 'left' : (touchStartX < window.innerWidth / 2);
-                    if (isLeft) { uiState.leftIndex = diffY < 0 ? Math.min(uiState.leftIndex + 1, MAX_WIDGETS) : Math.max(uiState.leftIndex - 1, 0); flashGearIcon('left', uiState.leftIndex); }
-                    else { uiState.rightIndex = diffY < 0 ? Math.min(uiState.rightIndex + 1, MAX_WIDGETS) : Math.max(uiState.rightIndex - 1, 0); flashGearIcon('right', uiState.rightIndex); }
-                    updateTrackTransforms();
-                }
-            }, { passive: true });
-        }
-
-        function enableDragScroll(el){
-            if(!el) return; let down=false,startX=0,left=0; el.classList.add('drag-scroll');
-            el.addEventListener('mousedown',e=>{down=true;startX=e.pageX;left=el.scrollLeft;});
-            window.addEventListener('mouseup',()=>down=false);
-            el.addEventListener('mousemove',e=>{ if(!down) return; e.preventDefault(); el.scrollLeft=left-(e.pageX-startX); });
-        }
-
-        function enableDragScrollY(el){
-            if(!el) return; let down=false,startY=0,top=0; el.classList.add('drag-scroll');
-            el.addEventListener('mousedown',e=>{down=true;startY=e.pageY;top=el.scrollTop;});
-            window.addEventListener('mouseup',()=>down=false);
-            el.addEventListener('mousemove',e=>{ if(!down) return; e.preventDefault(); el.scrollTop=top-(e.pageY-startY); });
-        }
-
-        function setupAllDiashows() { setupDiashowInstance('photo-l'); setupDiashowInstance('photo-r'); }
-        function setupDiashowInstance(id) {
-            if(diashowTimers[id]) clearInterval(diashowTimers[id]);
-            const conf = widgetConfigs[id], imgEl = document.getElementById(`widget-photo-${id.endsWith('-l') ? 'l' : 'r'}`); if(!imgEl) return;
-            let index = 0;
-            let step = () => { let list = conf.photos?.length ? conf.photos : defaultPhotos; if(list.length) { imgEl.style.backgroundImage = `url('${list[index % list.length]}')`; index++; } };
-            step(); diashowTimers[id] = setInterval(step, (conf.interval || 8) * 1000);
-        }
-
-        function initBurnInProtection() { const container = document.getElementById('protection-container'); setInterval(() => { container.style.transform = `translate(${Math.floor(Math.random() * 5) - 2}px, ${Math.floor(Math.random() * 5) - 2}px)`; }, 60000); }
-        document.getElementById('btn-fullscreen').addEventListener('click', () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => {}); else document.exitFullscreen(); });
     </script>
 </body>
 </html>
