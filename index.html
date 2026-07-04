@@ -21,6 +21,12 @@
             background: var(--bg-color); color: #ffffff; font-family: var(--font);
             overflow: hidden; width: 100vw; height: 100vh; display: flex;
             justify-content: center; align-items: center; -webkit-user-select: none; user-select: none;
+            transition: font-family 0.3s ease;
+        }
+
+        /* NEUE KLASSE FÜR DIE HANDSCHRIFTART */
+        body.handwriting-mode {
+            font-family: 'Brush Script MT', 'Comic Sans MS', cursive;
         }
 
         #scaling-wrapper {
@@ -32,35 +38,34 @@
         .main-slider { width: 100vw; height: 100vh; }
         .page { width: 100vw; height: 100vh; display: flex; justify-content: flex-start; align-items: flex-start; }
 
-        /* --- DASHBOARD GRID (Jetzt als absolut freies Canvas) --- */
         .dashboard-grid {
-            position: relative; /* Erlaubt die absolute Positionierung der Widgets */
+            position: relative; 
             width: 100vw; max-width: none; height: 100vh;
-            margin: 0;
-            overflow: hidden; /* Stufenlose Fläche */
+            margin: 0; overflow: hidden; 
         }
 
         .widget {
-            position: absolute; /* STUFENLOSE POSITIONIERUNG */
-            touch-action: none; /* VERHINDERT SCROLLEN BEIM ZIEHEN AUF TOUCHSCREENS */
-            width: var(--widget-w, 320px); height: var(--widget-h, 280px);
+            position: absolute; 
+            touch-action: none; 
+            width: 320px; height: 280px; /* Standardwerte */
             border-radius: 36px; padding: 22px; display: flex; flex-direction: column;
             justify-content: center; align-items: center; text-align: center;
             overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15);
             transition: border-color 0.2s, background 0.2s; cursor: grab;
+            resize: both; /* GRÖSSENVERSTELLER HINZUGEFÜGT */
         }
         .widget:active { cursor: grabbing; }
 
-        /* --- RESIZE HANDLE (STUFENLOS VERSTELLEN) --- */
-        .resize-handle {
-            position: absolute; bottom: 15px; right: 15px; width: 30px; height: 30px;
-            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); border-radius: 50%;
-            cursor: nwse-resize; z-index: 50; display: flex; justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.3s; pointer-events: auto !important;
+        /* WIDGET INHALT SKALIERUNGS-WRAPPER */
+        .widget-content {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            transform: scale(var(--w-font-scale, 1.0));
+            transform-origin: center center;
+            will-change: transform; /* HINZUGEFÜGT FÜR BUGFIX */
         }
-        .resize-handle::after { content: '⤡'; color: white; font-size: 16px; transform: rotate(90deg); }
         
-        /* --- CONFIG & DELETE BUTTONS --- */
         .widget-config-btn, .widget-delete-btn {
             position: absolute; top: 15px; background: rgba(30, 30, 30, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.15); color: white; font-size: 1.1rem; padding: 8px;
@@ -70,23 +75,19 @@
         .widget-config-btn { right: 15px; }
         .widget-delete-btn { left: 15px; background: rgba(255, 59, 48, 0.7); }
         
-        .widget:hover .resize-handle, .widget:active .resize-handle,
         .widget:hover .widget-config-btn, .widget:hover .widget-delete-btn { opacity: 1; }
 
-        /* DIGITAL & TEXT STYLES */
         .digital-clock { font-size: clamp(3rem, 5vw + 1rem, 6rem); font-weight: 800; letter-spacing: -2px; line-height: 1; }
         .seconds { font-size: 0.35em; margin-left: 5px; font-variant-numeric: tabular-nums; opacity: 0.8; }
         .date-sub { font-size: clamp(1rem, 1.5vw + 0.5rem, 1.5rem); margin-top: 8px; text-transform: capitalize; }
         .analog-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
         canvas.analog-canvas { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
 
-        /* CALENDAR */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; font-size: clamp(0.7rem, 2vw, 1rem); width: 100%; max-width: 350px; }
         .calendar-grid div { padding: 3px; text-align: center; }
         .cal-head { font-weight: bold; opacity: 0.7; }
         .cal-today { border-radius: 50%; font-weight: 900 !important; }
 
-        /* WEATHER */
         .weather-fullspace-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         .weather-detail-layout { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; text-align: left; }
         .weather-main-row { display: flex; justify-content: space-between; align-items: center; }
@@ -102,17 +103,14 @@
         .hourly-item { display: flex; flex-direction: column; align-items: center; justify-content: space-around; background: rgba(255,255,255,0.06); padding: 12px 8px; min-width: 70px; height: 90%; border-radius: 18px; }
         .daily-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 7px 14px; border-radius: 12px; font-size: 0.85rem; flex-shrink: 0; }
 
-        /* PHOTOS */
         .inline-photo-widget { width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 28px; transition: background-image 0.8s ease-in-out, background-size 0.2s; pointer-events: none; }
 
-        /* CONTROLS */
-        .inline-controls { display: flex; gap: 12px; margin-top: 12px; z-index: 15; }
-        .inline-btn { background: rgba(255, 255, 255, 0.15); border: none; color: white; padding: 10px 20px; border-radius: 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(5px); transition: background 0.2s, transform 0.1s; pointer-events: auto !important; }
+        .inline-controls { display: flex; gap: 12px; margin-top: 12px; z-index: 15; justify-content: center; }
+        .inline-btn { background: rgba(255, 255, 255, 0.15); border: none; color: white; padding: 10px 20px; border-radius: 18px; font-size: 1.2rem; font-weight: 600; cursor: pointer; backdrop-filter: blur(5px); transition: background 0.2s, transform 0.1s; pointer-events: auto !important; }
         .inline-btn:active { background: rgba(255, 255, 255, 0.3); transform: scale(0.95); }
-        .timer-setup-container { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; z-index: 15; }
+        .timer-setup-container { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; z-index: 15; justify-content: center; }
         .inline-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px; border-radius: 12px; width: 75px; text-align: center; font-size: 1.3rem; font-weight: bold; pointer-events: auto !important; }
 
-        /* UI BUTTONS GLOBAL */
         .ui-btn {
             position: fixed; z-index: 100; background: rgba(30,30,30,0.8); border: none;
             color: white; padding: 14px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(10px);
@@ -122,7 +120,6 @@
         #btn-settings { bottom: 20px; right: 20px; }
         #btn-fullscreen { bottom: 20px; right: 75px; }
 
-        /* MODALS */
         .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: #1c1c1e; width: 100%; max-width: 500px; border-radius: 24px; padding: 25px; border: 1px solid #2c2c2e; max-height: 90vh; overflow-y: auto; }
         .modal h2 { margin-bottom: 15px; color: #ff9f0a; font-size: 1.4rem; }
@@ -188,6 +185,16 @@
         <div class="modal-content">
             <h2 data-key="sys_settings_title">🌐 System-Einstellungen</h2>
             <div class="setting-group"><label data-key="global_scale">Dashboard-Größe (Skalierung)</label><input type="range" id="cfg-global-scale" min="0.7" max="1.3" step="0.05" value="1.0"></div>
+            
+            <!-- NEU: GLOBALE SCHRIFTART -->
+            <div class="setting-group">
+                <label data-key="global_font">Schriftart</label>
+                <select id="cfg-global-font">
+                    <option value="standard" data-key="font_standard">Standard (Serifenlos)</option>
+                    <option value="handwriting" data-key="font_handwriting">Handschriftart</option>
+                </select>
+            </div>
+
             <div class="setting-group"><label data-key="sys_lang">System-Sprache</label><select id="cfg-global-lang"><option value="de-DE">Deutsch (de-DE)</option><option value="en-US">English (en-US)</option></select></div>
             <div class="setting-group"><label data-key="bg_type">Hintergrundtyp</label><select id="cfg-global-bg-type" onchange="toggleBgPicker('global')"><option value="solid" data-key="opt_solid">Einfache Farbe</option><option value="linear" data-key="opt_linear">Linearer Farbverlauf</option><option value="mesh" data-key="opt_mesh">2D Mesh Farbverlauf</option></select></div>
             
@@ -213,7 +220,15 @@
         <div class="modal-content">
             <h2 id="widget-settings-title" data-key="widget_custom_title">Widget Anpassung</h2>
             <input type="hidden" id="current-widget-id">
-            <div class="setting-group row-layout"><label style="font-weight: bold; color: white;" data-key="text_bold">Text fett anzeigen (Bold)</label><input type="checkbox" id="widget-is-bold" style="width:22px; height:22px;"></div>
+
+            <div class="setting-group" id="group-font-scale">
+                <label data-key="font_scale">Schrift-/Inhaltsgröße</label>
+                <input type="range" id="widget-font-scale" min="0.5" max="2.0" step="0.05" value="1.0">
+            </div>
+
+            <!-- ID HINZUGEFÜGT FÜR DIE FETT-OPTION -->
+            <div class="setting-group row-layout" id="group-text-bold"><label style="font-weight: bold; color: white;" data-key="text_bold">Text fett anzeigen (Bold)</label><input type="checkbox" id="widget-is-bold" style="width:22px; height:22px;"></div>
+            
             <div class="setting-group"><label data-key="opacity">Hintergrund-Transparenz (0 = Rand verschwindet)</label><input type="range" id="widget-opacity" min="0" max="1" step="0.05" value="0.85"></div>
             <div class="setting-group"><label data-key="widget_bg_type">Widget Hintergrundtyp</label><select id="widget-bg-type" onchange="toggleBgPicker('widget')"><option value="solid" data-key="opt_solid">Einfache Farbe</option><option value="linear" data-key="opt_linear">Linearer Farbverlauf</option><option value="mesh" data-key="opt_mesh">2D Farbverlauf (Mesh)</option></select></div>
             
@@ -230,8 +245,15 @@
             </div>
 
             <div id="widget-mesh-container" class="setting-group" style="display:none;"><label data-key="mesh_editor">2D Verlauf Editor</label><div class="gradient-pad" id="widget-gradient-pad"></div><div style="display:flex; gap:10px; align-items:center; margin-top:5px;"><input type="color" id="widget-point-color" value="#0a84ff"><button type="button" class="inline-btn" id="widget-btn-del-point" style="padding:6px 12px; font-size:0.85rem;" data-key="delete_pt">Entfernen</button><div style="display:flex; flex-direction:column; font-size:0.75rem;"><label data-key="basis">Basis</label><input type="color" id="widget-mesh-base" value="#111111" style="height:28px; padding:0;"></div></div></div>
-            <div class="setting-group"><label data-key="text_color">Textfarbe Hauptinhalt</label><input type="color" id="widget-color-text" value="#ffffff"></div>
-            <div class="setting-group"><label data-key="accent_color">System-Akzentfarbe</label><input type="color" id="widget-color-accent" value="#ff9f0a"></div>
+            
+            <div class="setting-group" id="group-text-color">
+                <label data-key="text_color">Textfarbe Hauptinhalt</label>
+                <input type="color" id="widget-color-text" value="#ffffff">
+            </div>
+            <div class="setting-group" id="group-accent-color">
+                <label data-key="accent_color">System-Akzentfarbe</label>
+                <input type="color" id="widget-color-accent" value="#ff9f0a">
+            </div>
             
             <div class="setting-group" id="group-city" style="display:none;"><label data-key="city_label">Stadt für Wetterdaten</label><input type="text" id="widget-city-input" value="München"></div>
             
@@ -278,15 +300,15 @@
         const uiTranslations = {
             'de-DE': {
                 add_widget_title: "➕ Neues Widget", select_type: "Widget-Typ auswählen", opt_digital: "Digitaluhr", opt_analog: "Analoguhr", opt_world: "Weltuhr", opt_calendar: "Kalender", opt_weather: "Wetter (Aktuell)", opt_hourly: "Wetter (12 Stunden)", opt_daily: "Wetter (10 Tage)", opt_photo: "Foto-Diashow", opt_countdown: "Timer", opt_stopwatch: "Stoppuhr", btn_add: "Hinzufügen", btn_cancel: "Abbrechen",
-                sys_settings_title: "🌐 System-Einstellungen", global_scale: "Dashboard-Größe (Skalierung)", sys_lang: "System-Sprache", bg_type: "Hintergrundtyp", opt_solid: "Einfache Farbe", opt_linear: "Linearer Farbverlauf", opt_mesh: "2D Mesh Farbverlauf", bg_color_label: "Hintergrundfarbe", mesh_editor: "Mesh Editor", delete_pt: "Löschen", basis: "Basis", close_save: "Schließen & Sichern",
+                sys_settings_title: "🌐 System-Einstellungen", global_scale: "Dashboard-Größe (Skalierung)", global_font: "Schriftart", font_standard: "Standard (Serifenlos)", font_handwriting: "Handschriftart", sys_lang: "System-Sprache", bg_type: "Hintergrundtyp", opt_solid: "Einfache Farbe", opt_linear: "Linearer Farbverlauf", opt_mesh: "2D Mesh Farbverlauf", bg_color_label: "Hintergrundfarbe", mesh_editor: "Mesh Editor", delete_pt: "Löschen", basis: "Basis", close_save: "Schließen & Sichern",
                 widget_custom_title: "Widget Anpassung", text_bold: "Text fett anzeigen (Bold)", opacity: "Hintergrund-Transparenz (0 = Rand verschwindet)", widget_bg_type: "Widget Hintergrundtyp", text_color: "Textfarbe Hauptinhalt", accent_color: "System-Akzentfarbe", city_label: "Stadt für Wetterdaten", face_type: "Ziffernblatt-Typ", face_none: "Nur Striche (Leer)", face_main: "Hauptzahlen (12, 3, 6, 9)", face_all: "Alle Zahlen (1-12)", face_bg_type: "Zifferblatt-Hintergrundtyp", radial_grad: "Radialer Verlauf (Linien-Editor)", image_label: "Bild", upload_face: "Zifferblatt Bild hochladen", photo_fit: "Foto Ausrichtungsformat", fit_cover: "Ausfüllen (Cover)", fit_contain: "Einpassen (Contain)", upload_photos: "Neue Fotos hochladen", timezone_label: "Zeitzone (z.B. America/New_York)", widget_apply: "Widget anwenden",
-                confirm_delete: "Dieses Widget wirklich entfernen?"
+                confirm_delete: "Dieses Widget wirklich entfernen?", font_scale: "Schrift-/Inhaltsgröße"
             },
             'en-US': {
                 add_widget_title: "➕ New Widget", select_type: "Select Widget Type", opt_digital: "Digital Clock", opt_analog: "Analog Clock", opt_world: "World Clock", opt_calendar: "Calendar", opt_weather: "Weather (Current)", opt_hourly: "Weather (12 Hours)", opt_daily: "Weather (10 Days)", opt_photo: "Photo Slideshow", opt_countdown: "Timer", opt_stopwatch: "Stopwatch", btn_add: "Add Widget", btn_cancel: "Cancel",
-                sys_settings_title: "🌐 System Settings", global_scale: "Dashboard Scale", sys_lang: "System Language", bg_type: "Background Type", opt_solid: "Solid Color", opt_linear: "Linear Gradient", opt_mesh: "2D Mesh Gradient", bg_color_label: "Background Color", mesh_editor: "Mesh Editor", delete_pt: "Delete", basis: "Base", close_save: "Close & Save",
+                sys_settings_title: "🌐 System Settings", global_scale: "Dashboard Scale", global_font: "Font", font_standard: "Standard (Sans-Serif)", font_handwriting: "Handwriting", sys_lang: "System Language", bg_type: "Background Type", opt_solid: "Solid Color", opt_linear: "Linear Gradient", opt_mesh: "2D Mesh Gradient", bg_color_label: "Background Color", mesh_editor: "Mesh Editor", delete_pt: "Delete", basis: "Base", close_save: "Close & Save",
                 widget_custom_title: "Widget Customization", text_bold: "Display Text Bold", opacity: "Background Opacity (0 = border disappears)", widget_bg_type: "Widget Background Type", text_color: "Main Text Color", accent_color: "System Accent Color", city_label: "City for Weather Data", face_type: "Clockface Type", face_none: "Ticks Only (Empty)", face_main: "Main Numbers (12, 3, 6, 9)", face_all: "All Numbers (1-12)", face_bg_type: "Clockface Background Type", radial_grad: "Radial Gradient (Line Editor)", image_label: "Image", upload_face: "Upload Clockface Image", photo_fit: "Photo Fit Format", fit_cover: "Fill (Cover)", fit_contain: "Fit (Contain)", upload_photos: "Upload New Photos", timezone_label: "Timezone (e.g. America/New_York)", widget_apply: "Apply Widget",
-                confirm_delete: "Really remove this widget?"
+                confirm_delete: "Really remove this widget?", font_scale: "Font/Content Size"
             }
         };
 
@@ -300,9 +322,9 @@
         }
 
         // --- KONFIGURATIONEN ---
-        let globalConfig = { scale: 1.0, lang: 'de-DE', bgType: 'solid', bgSolid: '#000000', bgBase: '#000000', bgMeshPoints: [], bgGradStart: '#ff9f0a', bgGradEnd: '#0a84ff', bgGradAngle: 135 };
+        let globalConfig = { scale: 1.0, lang: 'de-DE', font: 'standard', bgType: 'solid', bgSolid: '#000000', bgBase: '#000000', bgMeshPoints: [], bgGradStart: '#ff9f0a', bgGradEnd: '#0a84ff', bgGradAngle: 135 };
         const defaultPhotos = [ "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200", "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200" ];
-        const baseConfig = () => ({ text: '#ffffff', accent: '#ff9f0a', bgType: 'solid', bgSolid: '#111111', bgMeshPoints: [], bgBase: '#111111', isBold: false, opacity: 0.85, bgGradStart: '#ff9f0a', bgGradEnd: '#0a84ff', bgGradAngle: 135 });
+        const baseConfig = () => ({ text: '#ffffff', accent: '#ff9f0a', bgType: 'solid', bgSolid: '#111111', bgMeshPoints: [], bgBase: '#111111', isBold: false, opacity: 0.85, bgGradStart: '#ff9f0a', bgGradEnd: '#0a84ff', bgGradAngle: 135, fontScale: 1.0 });
         const baseAnalogConfig = () => ({ ...baseConfig(), analogBgType: 'solid', analogSolidColor: '#1c1c1e', analogMeshBase: '#1c1c1e', analogMeshPoints: [], analogRadialPoints: [ { pos: 0, color: '#000000' }, { pos: 100, color: '#3a3a3c' } ], analogFaceType: 'none', analogImgData: null, analogGradientStart: '#1c1c1e', analogGradientEnd: '#3a3a3c', analogGradientAngle: 135 });
 
         let widgetConfigs = {};
@@ -328,9 +350,9 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             translateStaticUI();
+            if (globalConfig.font === 'handwriting') document.body.classList.add('handwriting-mode'); // Initiale Schriftart laden
             loadDashboardState();
-            initDragDelegation();     // <--- NEU: Stufenloses Verschieben
-            initResizeDelegation();   // <--- Aktualisiert für sauberes Skalieren
+            initDragDelegation();     // <--- Stufenloses Verschieben
             
             setupMeshPadListeners('global'); setupMeshPadListeners('widget'); setupMeshPadListeners('analog'); setupRadialLineListeners();
             applyGlobalScale(); applyAllWidgetStyles();
@@ -353,15 +375,16 @@
             else if(type === 'hourly') content = `<div class="weather-fullspace-container"><div style="font-size:0.9rem; font-weight:bold; margin-bottom:8px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;"><span>${isEn ? '12-Hours' : '12-Stunden'}</span><span id="hourly-city-${id}" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">${isEn ? 'Loading...' : 'Lade...'}</span></div><div class="hourly-scroll-container drag-scroll" id="hourly-container-${id}">${isEn ? 'Loading hourly weather...' : 'Lade Stunden-Wetter...'}</div></div>`;
             else if(type === 'daily') content = `<div class="weather-fullspace-container"><div style="font-size:0.9rem; font-weight:bold; margin-bottom:6px; text-align:left; display: flex; justify-content: space-between; align-items: center; width: 100%;"><span>${isEn ? '10-Days' : '10-Tage'}</span><span id="daily-city-${id}" style="opacity: 0.6; font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">${isEn ? 'Loading...' : 'Lade...'}</span></div><div class="daily-list-container drag-scroll-y" id="daily-container-${id}">${isEn ? 'Loading daily weather...' : 'Lade Tages-Wetter...'}</div></div>`;
             else if(type === 'photo') content = `<div class="inline-photo-widget" id="widget-photo-${id}"></div>`;
-            else if(type === 'countdown') content = `<div style="font-size: 1.1rem; margin-bottom: 5px;">Timer</div><div class="timer-setup-container" id="t-setup-${id}"><input type="number" class="inline-input" id="t-input-${id}" value="5" min="1" max="999"><span>${isEn ? 'Min' : 'Min'}</span><button class="inline-btn" onclick="inlineTimerAction('${id}', 'start')">▶ Start</button></div><div class="timer-run-container" id="t-run-${id}" style="display: none;"><div class="count-display" id="count-display-${id}" style="font-size: 3.8rem; font-weight: bold;">05:00</div><div class="inline-controls"><button class="inline-btn" id="t-btn-pause-${id}" onclick="inlineTimerAction('${id}', 'toggle')">⏸</button><button class="inline-btn" onclick="inlineTimerAction('${id}', 'reset')">⟲</button></div></div>`;
-            else if(type === 'stopwatch') content = `<div style="font-size: 1.1rem; margin-bottom: 5px;">${isEn ? 'Stopwatch' : 'Stoppuhr'}</div><div class="stopwatch-display" id="stopwatch-display-${id}" style="font-size: clamp(2rem, 3.5vw, 3.5rem); font-weight: bold; font-variant-numeric: tabular-nums;">00:00,00</div><div class="inline-controls"><button class="inline-btn" id="sw-btn-toggle-${id}" onclick="inlineStopwatchAction('${id}', 'toggle')">▶ Start</button><button class="inline-btn" onclick="inlineStopwatchAction('${id}', 'reset')">⟲ Reset</button></div>`;
+            else if(type === 'countdown') content = `<div style="font-size: 1.1rem; margin-bottom: 5px;">Timer</div><div class="timer-setup-container" id="t-setup-${id}"><input type="number" class="inline-input" id="t-input-${id}" value="5" min="1" max="999"><button class="inline-btn" onclick="inlineTimerAction('${id}', 'start')">▶</button></div><div class="timer-run-container" id="t-run-${id}" style="display: none;"><div class="count-display" id="count-display-${id}" style="font-size: 3.8rem; font-weight: bold;">05:00</div><div class="inline-controls"><button class="inline-btn" id="t-btn-pause-${id}" onclick="inlineTimerAction('${id}', 'toggle')">⏸</button><button class="inline-btn" onclick="inlineTimerAction('${id}', 'reset')">⟲</button></div></div>`;
+            else if(type === 'stopwatch') content = `<div style="font-size: 1.1rem; margin-bottom: 5px;">${isEn ? 'Stopwatch' : 'Stoppuhr'}</div><div class="stopwatch-display" id="stopwatch-display-${id}" style="font-size: clamp(2rem, 3.5vw, 3.5rem); font-weight: bold; font-variant-numeric: tabular-nums;">00:00,00</div><div class="inline-controls"><button class="inline-btn" id="sw-btn-toggle-${id}" onclick="inlineStopwatchAction('${id}', 'toggle')">▶</button><button class="inline-btn" onclick="inlineStopwatchAction('${id}', 'reset')">⟲</button></div>`;
 
             return `
             <div class="widget" data-id="${id}" data-type="${type}">
                 <button class="widget-delete-btn" onclick="deleteWidget(this)">❌</button>
-                <div class="resize-handle"></div>
                 <button class="widget-config-btn" onclick="openWidgetSettings('${id}')">⚙️</button>
-                ${content}
+                <div class="widget-content">
+                    ${content}
+                </div>
             </div>`;
         }
 
@@ -379,7 +402,10 @@
                 }
                 grid.insertAdjacentHTML('beforeend', getWidgetHTML(item.id, item.type));
                 let wEl = grid.lastElementChild;
-                wEl.style.setProperty('--widget-w', item.w); wEl.style.setProperty('--widget-h', item.h);
+                
+                // Setze die Größe direkt über style für den CSS Resizer
+                wEl.style.width = item.w; 
+                wEl.style.height = item.h;
                 
                 // Position setzen
                 wEl.style.left = item.left || '50px';
@@ -395,8 +421,9 @@
         function saveDashboardState() {
             const state = Array.from(grid.children).map(w => ({
                 id: w.getAttribute('data-id'), type: w.getAttribute('data-type'),
-                w: w.style.getPropertyValue('--widget-w') || '320px', 
-                h: w.style.getPropertyValue('--widget-h') || '280px',
+                // Speichere die aktuelle CSS-Größe (wichtig für den eingebauten Resizer)
+                w: w.style.width || '320px', 
+                h: w.style.height || '280px',
                 left: w.style.left || '50px',
                 top: w.style.top || '50px'
             }));
@@ -413,7 +440,8 @@
 
             grid.insertAdjacentHTML('beforeend', getWidgetHTML(id, type));
             const newWidget = grid.lastElementChild;
-            newWidget.style.setProperty('--widget-w', '320px'); newWidget.style.setProperty('--widget-h', '280px');
+            newWidget.style.width = '320px'; 
+            newWidget.style.height = '280px';
             newWidget.style.left = '50px'; 
             newWidget.style.top = '50px';
             
@@ -448,17 +476,21 @@
 
         function initDragDelegation() {
             grid.addEventListener('pointerdown', (e) => {
-                // Ignoriere Klicks auf Resize-Griff, Buttons, Inputs und scrollbare Wetter-Elemente
-                if (e.target.closest('.resize-handle') || e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.classList.contains('drag-scroll') || e.target.classList.contains('drag-scroll-y')) {
+                // Ignoriere Klicks auf Buttons, Inputs und scrollbare Wetter-Elemente
+                if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.classList.contains('drag-scroll') || e.target.classList.contains('drag-scroll-y')) {
                     return;
                 }
                 const widget = e.target.closest('.widget');
                 if (!widget) return;
 
+                // Verhindere Drag & Drop, falls am rechten unteren Rand gezogen wird (dort sitzt der CSS Resizer)
+                const rect = widget.getBoundingClientRect();
+                const isOnResizer = (e.clientX > rect.right - 20) && (e.clientY > rect.bottom - 20);
+                if(isOnResizer) return;
+
                 activeDragWidget = widget;
                 widget.setPointerCapture(e.pointerId);
                 
-                const rect = widget.getBoundingClientRect();
                 const scale = globalConfig.scale || 1.0;
                 
                 // Berechne den Klick-Offset im Widget unter Berücksichtigung des System-Zooms
@@ -490,48 +522,11 @@
                 saveDashboardState(); // Position speichern beim Loslassen
             };
 
-            grid.addEventListener('pointerup', stopDrag);
+            grid.addEventListener('pointerup', (e) => {
+                stopDrag(e);
+                saveDashboardState(); // Speichere die Position auch, wenn das CSS Resize beendet wird (da pointerup dann triggert)
+            });
             grid.addEventListener('pointercancel', stopDrag);
-        }
-
-        // --- STUFENLOSES SKALIEREN (RESIZE) ---
-        function initResizeDelegation() {
-            grid.addEventListener('mousedown', startResizeProcess);
-            grid.addEventListener('touchstart', startResizeProcess, {passive: false});
-        }
-
-        function startResizeProcess(e) {
-            if(!e.target.classList.contains('resize-handle')) return;
-            e.preventDefault(); e.stopPropagation();
-            const widget = e.target.closest('.widget');
-            const startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-            const startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-            const startW = widget.offsetWidth; const startH = widget.offsetHeight;
-
-            const onMove = (mEvt) => {
-                const scale = globalConfig.scale || 1.0;
-                const curX = mEvt.type.includes('mouse') ? mEvt.clientX : mEvt.touches[0].clientX;
-                const curY = mEvt.type.includes('mouse') ? mEvt.clientY : mEvt.touches[0].clientY;
-                
-                // Stufenlose und maßstabsgetreue Vergrößerung
-                const newW = Math.max(160, startW + (curX - startX) / scale); 
-                const newH = Math.max(160, startH + (curY - startY) / scale);
-                
-                widget.style.setProperty('--widget-w', `${newW}px`);
-                widget.style.setProperty('--widget-h', `${newH}px`);
-                
-                if(widget.querySelector('.analog-canvas')) {
-                    const id = widget.querySelector('.analog-canvas').id;
-                    drawAnalogClock(id, new Date(), widgetConfigs[widget.getAttribute('data-id')]);
-                }
-            };
-            const onEnd = () => {
-                window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onEnd);
-                window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd);
-                saveDashboardState();
-            };
-            window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onEnd);
-            window.addEventListener('touchmove', onMove, {passive: false}); window.addEventListener('touchend', onEnd);
         }
 
         // --- ENGINE-TICKER ---
@@ -636,7 +631,7 @@
         function inlineStopwatchAction(id, action) {
             if(!inlineStopwatches[id]) inlineStopwatches[id] = { running: false, elapsedMs: 0, startTimestamp: 0 };
             let sw = inlineStopwatches[id]; let btn = document.getElementById(`sw-btn-toggle-${id}`);
-            if(action === 'toggle') { if(!sw.running) { sw.running = true; sw.startTimestamp = Date.now(); btn.innerText = "⏸ Pause"; } else { sw.running = false; sw.elapsedMs += (Date.now() - sw.startTimestamp); btn.innerText = "▶ Start"; } } else if(action === 'reset') { sw.running = false; sw.elapsedMs = 0; btn.innerText = "▶ Start"; }
+            if(action === 'toggle') { if(!sw.running) { sw.running = true; sw.startTimestamp = Date.now(); btn.innerText = "⏸"; } else { sw.running = false; sw.elapsedMs += (Date.now() - sw.startTimestamp); btn.innerText = "▶"; } } else if(action === 'reset') { sw.running = false; sw.elapsedMs = 0; btn.innerText = "▶"; }
         }
         function formatMsToMinSec(ms) { let ts = Math.ceil(Math.max(0, ms) / 1000); return `${String(Math.floor(ts / 60)).padStart(2, '0')}:${String(ts % 60).padStart(2, '0')}`; }
         function formatMsToStopwatch(ms) { return `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')},${String(Math.floor((ms % 1000) / 10)).padStart(2, '0')}`; }
@@ -705,6 +700,9 @@
                 const id = el.getAttribute('data-id'); const conf = widgetConfigs[id]; if(!conf) return; const op = conf.opacity ?? 0.85;
                 if (op <= 0) el.style.border = "none"; else el.style.border = "1px solid rgba(255, 255, 255, 0.15)";
                 
+                // SKALIERUNG (Schrift/Inhalt) anwenden
+                el.style.setProperty('--w-font-scale', conf.fontScale || 1.0);
+
                 // APPLY WIDGET BG
                 let baseBg = '#111111';
                 if(conf.bgType === 'mesh') baseBg = compileMeshGradientCSS(conf.bgMeshPoints, conf.bgBase);
@@ -763,6 +761,7 @@
         // --- GLOBAL MODAL EVENTS ---
         document.getElementById('btn-settings').addEventListener('click', () => { 
             document.getElementById('cfg-global-scale').value = globalConfig.scale || 1.0; 
+            document.getElementById('cfg-global-font').value = globalConfig.font || 'standard'; // SCHRIFTART INS MODAL LADEN
             document.getElementById('cfg-global-lang').value = globalConfig.lang; 
             document.getElementById('cfg-global-bg-type').value = globalConfig.bgType || 'solid'; 
             document.getElementById('cfg-global-bg-solid').value = globalConfig.bgSolid || '#000000'; 
@@ -778,6 +777,7 @@
         
         document.getElementById('btn-close-settings').addEventListener('click', () => { 
             globalConfig.scale = parseFloat(document.getElementById('cfg-global-scale').value); 
+            globalConfig.font = document.getElementById('cfg-global-font').value; // SCHRIFTART ABSPEICHERN
             globalConfig.lang = document.getElementById('cfg-global-lang').value; 
             globalConfig.bgType = document.getElementById('cfg-global-bg-type').value; 
             globalConfig.bgSolid = document.getElementById('cfg-global-bg-solid').value; 
@@ -788,6 +788,13 @@
             globalConfig.bgMeshPoints = meshEditors.global.points; 
             localStorage.setItem('standby_global_v8', JSON.stringify(globalConfig)); 
             
+            // HANDSCHRIFTART ANWENDEN
+            if (globalConfig.font === 'handwriting') {
+                document.body.classList.add('handwriting-mode');
+            } else {
+                document.body.classList.remove('handwriting-mode');
+            }
+
             translateStaticUI();
             applyGlobalScale(); 
             lastSec = -1; 
@@ -803,6 +810,10 @@
             const lang = globalConfig.lang || 'de-DE';
             const dictionary = uiTranslations[lang] || uiTranslations['de-DE'];
             document.getElementById('widget-settings-title').innerText = `${dictionary.widget_custom_title}: ${type.toUpperCase()}`; 
+            
+            // Set Font Scale
+            document.getElementById('widget-font-scale').value = conf.fontScale || 1.0;
+
             document.getElementById('widget-is-bold').checked = conf.isBold || false; document.getElementById('widget-opacity').value = conf.opacity ?? 0.85; 
             document.getElementById('widget-bg-type').value = conf.bgType || 'solid'; 
             document.getElementById('widget-color-bg').value = conf.bgSolid || '#111111'; 
@@ -814,7 +825,17 @@
             meshEditors.widget.activeIndex = -1; 
             document.getElementById('widget-color-text').value = conf.text || '#ffffff'; 
             document.getElementById('widget-color-accent').value = conf.accent || '#ff9f0a';
+
+            // AUSBLENDEN VON OPTIONEN BASIEREND AUF DEM WIDGET-TYP
+            const noAccentWidgets = ['digital', 'world', 'hourly', 'daily', 'photo', 'countdown', 'stopwatch'];
+            const noTextWidgets = ['photo'];
+
+            document.getElementById('group-accent-color').style.display = noAccentWidgets.includes(type) ? 'none' : 'flex';
+            document.getElementById('group-text-color').style.display = noTextWidgets.includes(type) ? 'none' : 'flex';
             
+            // HIER WIRD DIE FETT-OPTION BEIM FOTO-WIDGET VERBORGEN
+            document.getElementById('group-text-bold').style.display = type === 'photo' ? 'none' : 'flex';
+
             const isWeather = ['weather', 'hourly', 'daily'].includes(type); document.getElementById('group-city').style.display = isWeather ? 'flex' : 'none'; if(isWeather) document.getElementById('widget-city-input').value = conf.city || 'München';
             const isAnalog = type === 'analog'; document.getElementById('group-analog-clockface').style.display = isAnalog ? 'flex' : 'none'; 
             if(isAnalog) { 
@@ -840,16 +861,32 @@
         function compressImage(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const MAX_WIDTH = 1024; const MAX_HEIGHT = 1024; let width = img.width; let height = img.height; if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } } canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height); resolve(canvas.toDataURL('image/jpeg', 0.45)); }; img.onerror = () => reject("Bildfehler"); img.src = e.target.result; }; reader.onerror = () => reject("Dateifehler"); reader.readAsDataURL(file); }); }
 
         document.getElementById('btn-save-widget-settings').addEventListener('click', async () => {
-            const id = document.getElementById('current-widget-id').value; const conf = widgetConfigs[id]; const type = document.querySelector(`.widget[data-id="${id}"]`).getAttribute('data-type');
-            conf.isBold = document.getElementById('widget-is-bold').checked; conf.opacity = parseFloat(document.getElementById('widget-opacity').value); 
+            const id = document.getElementById('current-widget-id').value; 
+            const conf = widgetConfigs[id]; 
+            const type = document.querySelector(`.widget[data-id="${id}"]`).getAttribute('data-type');
+            
+            // NEU: Wir merken uns die alte Stadt vor den Änderungen
+            const oldCity = conf.city;
+
+            // Save Font Scale
+            conf.fontScale = parseFloat(document.getElementById('widget-font-scale').value);
+
+            conf.isBold = document.getElementById('widget-is-bold').checked; 
+            conf.opacity = parseFloat(document.getElementById('widget-opacity').value); 
             conf.bgType = document.getElementById('widget-bg-type').value; 
             conf.bgSolid = document.getElementById('widget-color-bg').value; 
             conf.bgGradStart = document.getElementById('widget-grad-start').value;
             conf.bgGradEnd = document.getElementById('widget-grad-end').value;
             conf.bgGradAngle = parseInt(document.getElementById('widget-grad-angle').value);
-            conf.bgBase = document.getElementById('widget-mesh-base').value; conf.bgMeshPoints = meshEditors.widget.points; conf.text = document.getElementById('widget-color-text').value; conf.accent = document.getElementById('widget-color-accent').value;
+            conf.bgBase = document.getElementById('widget-mesh-base').value; 
+            conf.bgMeshPoints = meshEditors.widget.points; 
+            conf.text = document.getElementById('widget-color-text').value; 
+            conf.accent = document.getElementById('widget-color-accent').value;
             
-            if(['weather', 'hourly', 'daily'].includes(type)) conf.city = document.getElementById('widget-city-input').value.trim() || 'München';
+            if(['weather', 'hourly', 'daily'].includes(type)) {
+                conf.city = document.getElementById('widget-city-input').value.trim() || 'München';
+            }
+            
             if(type === 'analog') { 
                 conf.analogFaceType = document.getElementById('widget-analog-face-type').value; 
                 conf.analogBgType = document.getElementById('widget-analog-bg-type').value; 
@@ -857,12 +894,42 @@
                 conf.analogGradientStart = document.getElementById('widget-analog-grad-start').value;
                 conf.analogGradientEnd = document.getElementById('widget-analog-grad-end').value;
                 conf.analogGradientAngle = parseInt(document.getElementById('widget-analog-grad-angle').value);
-                conf.analogMeshBase = document.getElementById('analog-mesh-base').value; conf.analogMeshPoints = meshEditors.analog.points; conf.analogRadialPoints = radialLineEditor.points; const analogFileInp = document.getElementById('widget-analog-image-file'); if (analogFileInp && analogFileInp.files.length > 0) { try { conf.analogImgData = await compressImage(analogFileInp.files[0]); conf.analogImgElement = null; } catch(err) { alert(err); } } 
+                conf.analogMeshBase = document.getElementById('analog-mesh-base').value; 
+                conf.analogMeshPoints = meshEditors.analog.points; 
+                conf.analogRadialPoints = radialLineEditor.points; 
+                const analogFileInp = document.getElementById('widget-analog-image-file'); 
+                if (analogFileInp && analogFileInp.files.length > 0) { 
+                    try { 
+                        conf.analogImgData = await compressImage(analogFileInp.files[0]); 
+                        conf.analogImgElement = null; 
+                    } catch(err) { alert(err); } 
+                } 
             }
+            
             if(type === 'world') conf.tz = document.getElementById('widget-timezone-input').value.trim() || 'Europe/Berlin';
-            if(type === 'photo') { conf.fit = document.getElementById('widget-photo-fit').value; const fileInput = document.getElementById('widget-photo-files'); if (fileInput.files.length > 0) { let tempPhotos = []; for(let i=0; i<fileInput.files.length; i++) { try { let comp = await compressImage(fileInput.files[i]); tempPhotos.push(comp); } catch(err) {} } if(tempPhotos.length > 0) conf.photos = tempPhotos; } setupDiashowInstance(id); }
+            if(type === 'photo') { 
+                conf.fit = document.getElementById('widget-photo-fit').value; 
+                const fileInput = document.getElementById('widget-photo-files'); 
+                if (fileInput.files.length > 0) { 
+                    let tempPhotos = []; 
+                    for(let i=0; i<fileInput.files.length; i++) { 
+                        try { let comp = await compressImage(fileInput.files[i]); tempPhotos.push(comp); } catch(err) {} 
+                    } 
+                    if(tempPhotos.length > 0) conf.photos = tempPhotos; 
+                } 
+                setupDiashowInstance(id); 
+            }
+            
             try { localStorage.setItem('standby_widgets_v8', JSON.stringify(widgetConfigs)); } catch (err) { alert("Speicher voll! Bitte lade weniger/kleinere Bilder hoch."); }
-            applyAllWidgetStyles(); if(['weather', 'hourly', 'daily'].includes(type)) fetchWeatherMasterData(id); widgetModal.style.display = 'none';
+            
+            applyAllWidgetStyles(); 
+            
+            // NEU: Das Widget lädt seine Elemente nur noch neu, wenn sich der Name der Stadt geändert hat!
+            if(['weather', 'hourly', 'daily'].includes(type) && oldCity !== conf.city) {
+                fetchWeatherMasterData(id);
+            }
+            
+            widgetModal.style.display = 'none';
         });
     </script>
 </body>
